@@ -8,4 +8,5 @@ type User struct {
 type Provider struct {
 	id int64
 	description string
+	rating float32
 }
