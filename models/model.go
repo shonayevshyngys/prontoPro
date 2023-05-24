@@ -1,12 +1,14 @@
 package models
 
+import "gorm.io/gorm"
+
 type User struct {
-	id int64
-	username string
+	gorm.Model
+	Username string
 }
 
 type Provider struct {
-	id int64
-	description string
-	rating float32
+	gorm.Model
+	Description string
+	Rating float32
 }
