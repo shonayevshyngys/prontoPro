@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+	"shonayevshyngys/controllers"
 	"shonayevshyngys/database"
 	"shonayevshyngys/models"
 
@@ -12,17 +14,28 @@ func init() {
 	database.ConnectToDatabase()
 
 	//This one is created only for local testing, for persistent db should be deleted
-	database.DatabaseInstance.AutoMigrate()
-	database.DatabaseInstance.AutoMigrate(&models.Provider{})
-	database.DatabaseInstance.AutoMigrate(&models.User{})
+	var err error
+	err = database.Instance.AutoMigrate(&models.Provider{})
+	if err != nil {
+		log.Fatal("Provider table wasn't created")
+	}
+	err = database.Instance.AutoMigrate(&models.User{})
+	if err != nil {
+		log.Fatal("User table wasn't created")
+	}
+	err = database.Instance.AutoMigrate(&models.Review{})
+	if err != nil {
+		log.Fatal("Review table wasn't created")
+	}
 }
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	r.Run()
+	controllers.UserRoutes(r)
+	controllers.ProviderRoutes(r)
+	controllers.RatingRoutes(r)
+	err := r.Run()
+	if err != nil {
+		return
+	}
 }

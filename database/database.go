@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var DatabaseInstance *gorm.DB
+var Instance *gorm.DB
 
 func ConnectToDatabase() {
 
@@ -17,5 +17,5 @@ func ConnectToDatabase() {
 	if err != nil {
 		log.Fatal("Failed connect to database")
 	}
-	DatabaseInstance = db // newer version of golang forces this
+	Instance = db // newer version of golang forces this
 }
