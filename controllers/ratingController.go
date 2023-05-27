@@ -6,6 +6,7 @@ import (
 	"shonayevshyngys/models"
 	"shonayevshyngys/services"
 	"shonayevshyngys/util"
+	"strconv"
 )
 
 const dbErrorText = "Something went wrong during saving to DB"
@@ -38,7 +39,6 @@ func ProviderRoutes(route *gin.Engine) {
 	provider.POST("", func(context *gin.Context) {
 		var providerBody models.Provider
 		err := context.ShouldBindJSON(&providerBody)
-		providerBody.ID = 0
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: wrongBodyErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
@@ -52,27 +52,43 @@ func ProviderRoutes(route *gin.Engine) {
 		}
 		context.JSON(http.StatusCreated, providerBody)
 	})
-	provider.GET("")
+	provider.GET("/:id", func(context *gin.Context) {
+		var provider models.Provider
+		id, err := strconv.Atoi(context.Param("id"))
+		if err != nil || id < 1 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
+		}
+
+		err = services.GetProvider(&provider, id)
+		if err != nil {
+			errMsg := util.ErrorMessage{Code: 404, Message: "Not found"}
+			context.JSON(http.StatusNotFound, errMsg)
+			return
+		}
+
+		context.JSON(http.StatusOK, provider)
+	})
 }
 
 func ReviewRoutes(route *gin.Engine) {
 	rating := route.Group("/review")
 	rating.POST("", func(context *gin.Context) {
-		var reviewBody models.Review
+		var reviewBody util.CreateReviewDTO
 		err := context.ShouldBindJSON(&reviewBody)
-		reviewBody.ID = 0
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: wrongBodyErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = services.CreateReview(&reviewBody)
+		review, err := services.CreateReview(&reviewBody)
 		if err != nil {
-			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
+			errMsg := util.ErrorMessage{Code: 400, Message: "Not found"}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		context.JSON(http.StatusCreated, reviewBody)
+		context.JSON(http.StatusCreated, review)
 
 	})
 }
