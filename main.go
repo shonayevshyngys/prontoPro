@@ -33,7 +33,7 @@ func main() {
 	r := gin.Default()
 	controllers.UserRoutes(r)
 	controllers.ProviderRoutes(r)
-	controllers.RatingRoutes(r)
+	controllers.ReviewRoutes(r)
 	err := r.Run()
 	if err != nil {
 		return

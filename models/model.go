@@ -1,21 +1,21 @@
 package models
 
-import "gorm.io/gorm"
-
 type User struct {
-	gorm.Model `json:"-"`
-	Username   string `json:"username" binding:"required"`
+	ID       uint   `gorm:"primarykey" json:"id"`
+	Username string `json:"username" binding:"required"`
 }
 
 type Provider struct {
-	gorm.Model  `json:"-"`
-	Description string  `json:"description"`
-	Rating      float32 `json:":rating"`
+	ID          uint    `gorm:"primarykey" json:"id"`
+	Name        string  `json:"name" binding:"required"`
+	Description string  `json:"description" binding:"required"`
+	Rating      float32 `json:"rating"`
 }
 
 type Review struct {
-	gorm.Model `json:"-"`
-	UserId     uint   `json:"userId"`
-	ProviderId uint   `json:"providerId"`
+	ID         uint   `gorm:"primarykey" json:"id"`
+	UserId     uint   `json:"userId"  binding:"required"`
+	ProviderId uint   `json:"providerId"  binding:"required"`
 	ReviewText string `json:"reviewText"`
+	Rating     uint8  `json:"rating" binding:"required"`
 }
