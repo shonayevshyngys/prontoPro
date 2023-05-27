@@ -17,5 +17,6 @@ func ConnectToDatabase() {
 	if err != nil {
 		log.Fatal("Failed connect to database")
 	}
+	db.Set("gorm:auto_preload", true)
 	Instance = db // newer version of golang forces this
 }
