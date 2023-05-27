@@ -1,4 +1,4 @@
-module shonayevshyngys
+module github.com/shonayevshyngys/prontopro
 
 go 1.20
 
