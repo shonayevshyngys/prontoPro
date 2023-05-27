@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/shonayevshyngys/prontopro/models"
-	"github.com/shonayevshyngys/prontopro/services"
-	"github.com/shonayevshyngys/prontopro/util"
+	"github.com/shonayevshyngys/prontopro/rating_service/models"
+	"github.com/shonayevshyngys/prontopro/rating_service/services"
+	"github.com/shonayevshyngys/prontopro/rating_service/util"
 	"net/http"
 	"strconv"
 )

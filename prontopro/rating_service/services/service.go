@@ -2,9 +2,9 @@ package services
 
 import (
 	"errors"
-	"github.com/shonayevshyngys/prontopro/database"
-	"github.com/shonayevshyngys/prontopro/models"
-	"github.com/shonayevshyngys/prontopro/util"
+	"github.com/shonayevshyngys/prontopro/rating_service/database"
+	"github.com/shonayevshyngys/prontopro/rating_service/models"
+	"github.com/shonayevshyngys/prontopro/rating_service/util"
 )
 
 const objectNotCreatedErrorText = "object wasn't created"
