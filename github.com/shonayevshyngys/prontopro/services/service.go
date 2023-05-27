@@ -2,9 +2,9 @@ package services
 
 import (
 	"errors"
-	"shonayevshyngys/database"
-	"shonayevshyngys/models"
-	"shonayevshyngys/util"
+	"github.com/shonayevshyngys/prontopro/database"
+	"github.com/shonayevshyngys/prontopro/models"
+	"github.com/shonayevshyngys/prontopro/util"
 )
 
 const objectNotCreatedErrorText = "object wasn't created"
@@ -50,10 +50,7 @@ func GetProvider(provider *models.Provider, id int) error {
 		return errors.New(objectNotCreatedErrorText)
 	}
 	var rating float32
-	err := database.Instance.Raw("SELECT AVG(Rating) FROM reviews WHERE provider_id = ?", provider.ID).Scan(&rating).Error
-	if err != nil {
-		return err
-	}
+	database.Instance.Raw("SELECT AVG(Rating) FROM reviews WHERE provider_id = ?", provider.ID).Scan(&rating)
 	provider.Rating = rating
 	return nil
 }

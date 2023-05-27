@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/shonayevshyngys/prontopro/models"
+	"github.com/shonayevshyngys/prontopro/services"
+	"github.com/shonayevshyngys/prontopro/util"
 	"net/http"
-	"shonayevshyngys/models"
-	"shonayevshyngys/services"
-	"shonayevshyngys/util"
 	"strconv"
 )
 
@@ -77,14 +77,19 @@ func ReviewRoutes(route *gin.Engine) {
 	rating.POST("", func(context *gin.Context) {
 		var reviewBody util.CreateReviewDTO
 		err := context.ShouldBindJSON(&reviewBody)
-		if err != nil {
+		if err != nil || reviewBody.UserId < 1 || reviewBody.ProviderId < 1 {
 			errMsg := util.ErrorMessage{Code: 400, Message: wrongBodyErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
 		review, err := services.CreateReview(&reviewBody)
 		if err != nil {
-			errMsg := util.ErrorMessage{Code: 400, Message: "Not found"}
+			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
+		}
+		if review.ID == 0 || review.User.ID == 0 || review.Provider.ID == 0 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "User and/or Provider doesnt' exist"}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}

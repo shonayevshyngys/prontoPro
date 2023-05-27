@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/shonayevshyngys/prontopro/controllers"
+	"github.com/shonayevshyngys/prontopro/database"
+	"github.com/shonayevshyngys/prontopro/models"
 	"log"
-	"shonayevshyngys/controllers"
-	"shonayevshyngys/database"
-	"shonayevshyngys/models"
 
 	"github.com/gin-gonic/gin"
 )
