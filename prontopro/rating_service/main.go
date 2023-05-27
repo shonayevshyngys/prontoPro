@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/shonayevshyngys/prontopro/controllers"
-	"github.com/shonayevshyngys/prontopro/database"
-	"github.com/shonayevshyngys/prontopro/models"
+	"github.com/shonayevshyngys/prontopro/rating_service/controllers"
+	"github.com/shonayevshyngys/prontopro/rating_service/database"
+	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"log"
 
 	"github.com/gin-gonic/gin"
