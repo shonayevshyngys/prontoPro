@@ -35,6 +35,9 @@ func CreateReview(reviewDTO *util.CreateReviewDTO) (models.Review, error) {
 		UserID:     reviewDTO.UserId,
 		ProviderID: reviewDTO.ProviderId,
 	}
+	if !database.UserExists(review.UserID) || !database.ProviderExists(review.ProviderID) {
+		return review, errors.New("user or provider doesn't exist")
+	}
 	database.Instance.Create(&review)
 	if review.ID == 0 {
 		return review, errors.New(objectNotCreatedErrorText)

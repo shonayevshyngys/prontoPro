@@ -5,6 +5,7 @@ import (
 	"github.com/shonayevshyngys/prontopro/rating_service/database"
 	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,12 +31,16 @@ func init() {
 }
 
 func main() {
+	log.Println(os.Getenv("DATASOURCE"))
+	log.Println(os.Getenv("PORT"))
 	r := gin.Default()
 	controllers.UserRoutes(r)
 	controllers.ProviderRoutes(r)
 	controllers.ReviewRoutes(r)
 	err := r.Run()
 	if err != nil {
+
+		log.Fatal(err)
 		return
 	}
 }

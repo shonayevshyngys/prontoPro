@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:10-alpine3.16
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=rating_service
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-d", "db_prod" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+
+  rating-service-container:
+    build:
+      context: prontopro
+      dockerfile: ./rating_service/Dockerfile_rating_service
+    ports:
+      - "7000:7000"
+    environment:
+      - DATASOURCE=host=postgres user=postgres password=postgres dbname=rating_service port=5432
+      - PORT=7000
+    depends_on:
+        postgres:
+          condition: service_healthy

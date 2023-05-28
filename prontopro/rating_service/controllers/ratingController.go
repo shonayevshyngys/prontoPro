@@ -82,14 +82,14 @@ func ReviewRoutes(route *gin.Engine) {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		review, err := services.CreateReview(&reviewBody)
-		if err != nil {
-			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
+		if reviewBody.Rating < 0 || reviewBody.Rating > 5 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Rating can be in range of 0 to 5"}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		if review.ID == 0 || review.User.ID == 0 || review.Provider.ID == 0 {
-			errMsg := util.ErrorMessage{Code: 400, Message: "User and/or Provider doesnt' exist"}
+		review, err := services.CreateReview(&reviewBody)
+		if err != nil {
+			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
