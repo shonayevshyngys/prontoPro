@@ -3,14 +3,12 @@ LABEL authors="shonayevshyngys"
 
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+COPY rating_service/go.mod ./
+COPY rating_service/go.sum ./
 RUN go mod download
 
-COPY . ./
+COPY rating_service/. ./
 
-RUN go build
-
-EXPOSE 8080
+RUN go build rating_service.go
 
 CMD [ "./rating_service" ]
