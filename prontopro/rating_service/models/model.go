@@ -1,5 +1,7 @@
 package models
 
+import "gorm.io/gorm"
+
 type User struct {
 	ID       uint   `gorm:"primaryKey" json:"id"`
 	Username string `json:"username" binding:"required"`
@@ -20,4 +22,10 @@ type Review struct {
 	Provider   Provider `gorm:"foreignKey:ID" references:"ID"`
 	ReviewText string   `json:"reviewText"`
 	Rating     uint8    `json:"rating" binding:"required"`
+}
+
+type Notification struct {
+	gorm.Model
+	ProviderID   uint
+	Notification string
 }

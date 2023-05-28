@@ -39,7 +39,6 @@ func main() {
 	controllers.ReviewRoutes(r)
 	err := r.Run()
 	if err != nil {
-
 		log.Fatal(err)
 		return
 	}

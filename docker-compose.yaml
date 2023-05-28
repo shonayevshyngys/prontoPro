@@ -10,13 +10,13 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=rating_service
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready", "-d", "db_prod" ]
-      interval: 30s
+      test: [ "CMD-SHELL", "pg_isready -d rating_service -U postgres" ]
+      interval: 15s
       timeout: 60s
       retries: 5
       start_period: 80s
 
-  rating-service-container:
+  rating-service:
     build:
       context: prontopro
       dockerfile: ./rating_service/Dockerfile_rating_service
@@ -28,3 +28,17 @@ services:
     depends_on:
         postgres:
           condition: service_healthy
+
+
+  notification-service:
+    build:
+      context: prontopro
+      dockerfile: ./rating_service/Dockerfile_notification_service
+    ports:
+      - "7001:7001"
+    environment:
+      - DATASOURCE=host=postgres user=postgres password=postgres dbname=rating_service port=5432
+      - PORT=7001
+    depends_on:
+      postgres:
+        condition: service_healthy

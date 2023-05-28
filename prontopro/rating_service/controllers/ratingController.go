@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"github.com/shonayevshyngys/prontopro/rating_service/services"
 	"github.com/shonayevshyngys/prontopro/rating_service/util"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -74,6 +76,7 @@ func ProviderRoutes(route *gin.Engine) {
 
 func ReviewRoutes(route *gin.Engine) {
 	rating := route.Group("/review")
+
 	rating.POST("", func(context *gin.Context) {
 		var reviewBody util.CreateReviewDTO
 		err := context.ShouldBindJSON(&reviewBody)
@@ -95,5 +98,17 @@ func ReviewRoutes(route *gin.Engine) {
 		}
 		context.JSON(http.StatusCreated, review)
 
+		go func() {
+
+			notification := models.Notification{
+				ProviderID:   review.ProviderID,
+				Notification: fmt.Sprintf("New rating %d submitted by %s", review.Rating, review.User.Username),
+			}
+
+			err := util.SaveNotification(&notification)
+			if err != nil {
+				log.Println("Something went wrong during saving notification ", err)
+			}
+		}()
 	})
 }
