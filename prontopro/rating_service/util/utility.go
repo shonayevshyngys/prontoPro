@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"log"
 	"net/http"
@@ -11,6 +12,9 @@ import (
 type ErrorMessage struct {
 	Code    uint
 	Message string
+}
+type Subscribers struct {
+	Ids map[int]string
 }
 
 func SaveNotification(notification *models.Notification) error {
@@ -26,4 +30,21 @@ func SaveNotification(notification *models.Notification) error {
 		return err
 	}
 	return nil
+}
+
+func CheckIfUserAndProviderExists(provider int, user int) (bool, error) {
+
+	log.Println("Checking if user or provider exists")
+	//change later
+	url := fmt.Sprintf("http://rating-service:7000/check/%d/%d", provider, user)
+	resp, err := http.Get(url)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode == http.StatusOK {
+		return true, nil
+	} else {
+		return false, nil
+	}
+
 }

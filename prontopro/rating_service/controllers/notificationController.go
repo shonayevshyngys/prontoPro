@@ -6,6 +6,7 @@ import (
 	"github.com/shonayevshyngys/prontopro/rating_service/services"
 	"github.com/shonayevshyngys/prontopro/rating_service/util"
 	"net/http"
+	"strconv"
 )
 
 func NotificationRoutes(route *gin.Engine) {
@@ -23,21 +24,38 @@ func NotificationRoutes(route *gin.Engine) {
 		context.JSON(http.StatusCreated, notificationBody)
 	})
 
-	notification.POST("/subscribeAsUser", func(context *gin.Context) {
+	notification.GET("/provider/:id", func(context *gin.Context) {
 
-		type subscriberBody struct {
-			userId     uint
-			providerId uint
+		id, err := strconv.Atoi(context.Param("id"))
+		if err != nil || id < 1 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
 		}
+		notifications, err := services.GetProviderNotifications(id)
+		if err != nil || len(notifications) == 0 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
+			context.JSON(http.StatusNotFound, errMsg)
+			return
+		}
+		context.JSON(http.StatusOK, notifications)
+	})
 
-		var subscriber subscriberBody
-		err := context.ShouldBindJSON(&subscriber)
+	notification.POST("/subscribe", func(context *gin.Context) {
+		var subscriptionBody util.SubscriptionBody
+		err := context.ShouldBindJSON(&subscriptionBody)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: wrongBodyErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
+		err = services.SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId)
+		if err != nil {
+			context.JSON(http.StatusBadRequest, err)
+			return
+		}
 
+		go services.Subscribe(&subscriptionBody)
+		context.JSON(http.StatusOK, "subscribed")
 	})
-
 }

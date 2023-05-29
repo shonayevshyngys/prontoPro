@@ -37,6 +37,7 @@ func main() {
 	controllers.UserRoutes(r)
 	controllers.ProviderRoutes(r)
 	controllers.ReviewRoutes(r)
+	controllers.CheckRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)

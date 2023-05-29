@@ -6,3 +6,8 @@ type CreateReviewDTO struct {
 	ReviewText string `json:"reviewText"`
 	Rating     uint8  `json:"rating" binding:"required"`
 }
+
+type SubscriptionBody struct {
+	UserId     int
+	ProviderId int
+}

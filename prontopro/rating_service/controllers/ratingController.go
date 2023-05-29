@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/shonayevshyngys/prontopro/rating_service/database"
 	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"github.com/shonayevshyngys/prontopro/rating_service/services"
 	"github.com/shonayevshyngys/prontopro/rating_service/util"
@@ -110,5 +111,29 @@ func ReviewRoutes(route *gin.Engine) {
 				log.Println("Something went wrong during saving notification ", err)
 			}
 		}()
+	})
+}
+
+func CheckRoutes(route *gin.Engine) {
+	check := route.Group("/check")
+	check.GET("/:providerID/:userID", func(context *gin.Context) {
+		providerId, err := strconv.Atoi(context.Param("providerID"))
+		if err != nil || providerId < 1 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
+		}
+		userId, err := strconv.Atoi(context.Param("userID"))
+		if err != nil || userId < 1 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
+		}
+		if database.ProviderExists(uint(providerId)) && database.UserExists(uint(userId)) {
+			context.JSON(http.StatusOK, "ok")
+			return
+		} else {
+			context.JSON(http.StatusBadRequest, "not ok")
+		}
 	})
 }
