@@ -1,7 +1,9 @@
 package database
 
 import (
+	"context"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"log"
 	"os"
@@ -11,6 +13,8 @@ import (
 )
 
 var Instance *gorm.DB
+var RedisInstance *redis.Client
+var RedisContext context.Context
 
 func ConnectToDatabase() {
 
@@ -23,6 +27,16 @@ func ConnectToDatabase() {
 	}
 	db.Set("gorm:auto_preload", true)
 	Instance = db // newer version of golang forces this
+}
+
+func ConnectToRedis() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_URL"),
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	RedisInstance = client
+	RedisContext = context.Background()
 }
 
 func UserExists(id uint) bool {

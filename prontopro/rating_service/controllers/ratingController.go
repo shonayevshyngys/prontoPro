@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/shonayevshyngys/prontopro/rating_service/database"
 	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"github.com/shonayevshyngys/prontopro/rating_service/services"
 	"github.com/shonayevshyngys/prontopro/rating_service/util"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -74,6 +77,7 @@ func ProviderRoutes(route *gin.Engine) {
 
 func ReviewRoutes(route *gin.Engine) {
 	rating := route.Group("/review")
+
 	rating.POST("", func(context *gin.Context) {
 		var reviewBody util.CreateReviewDTO
 		err := context.ShouldBindJSON(&reviewBody)
@@ -95,5 +99,41 @@ func ReviewRoutes(route *gin.Engine) {
 		}
 		context.JSON(http.StatusCreated, review)
 
+		go func() {
+
+			notification := models.Notification{
+				ProviderID:   review.ProviderID,
+				Notification: fmt.Sprintf("New rating %d submitted by %s", review.Rating, review.User.Username),
+			}
+
+			errNotif := util.SaveNotification(&notification)
+			if errNotif != nil {
+				log.Println("Something went wrong during saving notification ", err)
+			}
+		}()
+	})
+}
+
+func CheckRoutes(route *gin.Engine) {
+	check := route.Group("/check")
+	check.GET("/:providerID/:userID", func(context *gin.Context) {
+		providerId, err := strconv.Atoi(context.Param("providerID"))
+		if err != nil || providerId < 1 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
+		}
+		userId, err := strconv.Atoi(context.Param("userID"))
+		if err != nil || userId < 1 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
+		}
+		if database.ProviderExists(uint(providerId)) && database.UserExists(uint(userId)) {
+			context.JSON(http.StatusOK, "ok")
+			return
+		} else {
+			context.JSON(http.StatusBadRequest, "not ok")
+		}
 	})
 }

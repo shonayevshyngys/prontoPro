@@ -1,0 +1,14 @@
+FROM golang:1.20-alpine
+LABEL authors="shonayevshyngys"
+
+WORKDIR /app
+
+COPY rating_service/go.mod ./
+COPY rating_service/go.sum ./
+RUN go mod download
+
+COPY rating_service/. ./
+
+RUN go build notification_service.go
+
+CMD [ "./notification_service" ]

@@ -1,5 +1,9 @@
 package models
 
+import "gorm.io/gorm"
+
+//Rating models
+
 type User struct {
 	ID       uint   `gorm:"primaryKey" json:"id"`
 	Username string `json:"username" binding:"required"`
@@ -15,9 +19,17 @@ type Provider struct {
 type Review struct {
 	ID         uint `gorm:"primaryKey" json:"id"`
 	UserID     uint
-	User       User `gorm:"foreignKey:ID" references:"ID"`
+	User       User `gorm:"foreignKey:user_id" references:"ID"`
 	ProviderID uint
-	Provider   Provider `gorm:"foreignKey:ID" references:"ID"`
+	Provider   Provider `gorm:"foreignKey:provider_id" references:"ID"`
 	ReviewText string   `json:"reviewText"`
 	Rating     uint8    `json:"rating" binding:"required"`
+}
+
+//Notification models
+
+type Notification struct {
+	gorm.Model   `json:"-"`
+	ProviderID   uint
+	Notification string
 }
