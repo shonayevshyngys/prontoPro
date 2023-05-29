@@ -22,10 +22,46 @@ func SaveNotification(notification *models.Notification) {
 		"ProviderID_"+strconv.Itoa(int(notification.ProviderID)),
 		jsonBody,
 	)
+	go sendNotificationToSubbedUsers(notification.ProviderID, jsonBody)
+}
+
+func sendNotificationToSubbedUsers(id uint, jsonBody []byte) {
+	res, err := database.RedisInstance.Get(database.RedisContext,
+		"ProviderID_"+strconv.Itoa(int(id))+"_subs").Result()
+	if err != nil {
+		log.Printf("Provider %d doesnt have subscirbers\n", id)
+	}
+	var subscribers util.Subscribers
+	err = json.Unmarshal([]byte(res), &subscribers)
+	if err != nil {
+		log.Println("Something went wrong on parsing")
+	}
+	for key, _ := range subscribers.Ids {
+		var redisKey string
+		redisKey = "UserID_" + strconv.Itoa(key)
+		go func() {
+			_, err := database.RedisInstance.RPush(database.RedisContext, redisKey, jsonBody).Result()
+			if err != nil {
+				log.Println("failed to persist to redis", err)
+			}
+		}()
+	}
+
 }
 
 func GetProviderNotifications(id int) ([]models.Notification, error) {
 	key := "ProviderID_" + strconv.Itoa(id)
+	notificaitons, err := getNotifications(id, key)
+	return notificaitons, err
+}
+
+func GetUserNotifications(id int) ([]models.Notification, error) {
+	key := "UserID_" + strconv.Itoa(id)
+	notificaitons, err := getNotifications(id, key)
+	return notificaitons, err
+}
+
+func getNotifications(id int, key string) ([]models.Notification, error) {
 	stringNotifications, err := database.RedisInstance.LRange(database.RedisContext, key, 0, -1).Result()
 	if err != nil || len(stringNotifications) == 0 {
 		return nil, err
@@ -43,9 +79,8 @@ func GetProviderNotifications(id int) ([]models.Notification, error) {
 	return notificaitons, err
 }
 
-func SubscribeUserToProvider(provider int, user int) error {
+func SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error {
 	exists, err := util.CheckIfUserAndProviderExists(provider, user)
-	log.Println(exists, err)
 	if err != nil {
 		log.Println("Couldn't verify if user/provider exists")
 		return err
@@ -56,10 +91,11 @@ func SubscribeUserToProvider(provider int, user int) error {
 		log.Println(res)
 		return errors.New(res)
 	}
+	go subscribe(subBody)
 	return nil
 }
 
-func Subscribe(subscriptionBody *util.SubscriptionBody) {
+func subscribe(subscriptionBody *util.SubscriptionBody) {
 	key := "ProviderID_" + strconv.Itoa(subscriptionBody.ProviderId) + "_subs"
 	res, err := database.RedisInstance.Get(database.RedisContext, key).Result()
 	if err != nil {

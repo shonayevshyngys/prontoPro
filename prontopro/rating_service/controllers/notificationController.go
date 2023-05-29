@@ -10,9 +10,9 @@ import (
 )
 
 func NotificationRoutes(route *gin.Engine) {
-	notification := route.Group("/notification")
+	notification := route.Group("")
 
-	notification.POST("", func(context *gin.Context) {
+	notification.POST("/notification", func(context *gin.Context) {
 		var notificationBody models.Notification
 		err := context.ShouldBindJSON(&notificationBody)
 		if err != nil {
@@ -41,6 +41,22 @@ func NotificationRoutes(route *gin.Engine) {
 		context.JSON(http.StatusOK, notifications)
 	})
 
+	notification.GET("/user/:id", func(context *gin.Context) {
+		id, err := strconv.Atoi(context.Param("id"))
+		if err != nil || id < 1 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			context.JSON(http.StatusBadRequest, errMsg)
+			return
+		}
+		notifications, err := services.GetUserNotifications(id)
+		if err != nil || len(notifications) == 0 {
+			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
+			context.JSON(http.StatusNotFound, errMsg)
+			return
+		}
+		context.JSON(http.StatusOK, notifications)
+	})
+
 	notification.POST("/subscribe", func(context *gin.Context) {
 		var subscriptionBody util.SubscriptionBody
 		err := context.ShouldBindJSON(&subscriptionBody)
@@ -49,13 +65,11 @@ func NotificationRoutes(route *gin.Engine) {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = services.SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId)
+		err = services.SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
 		if err != nil {
 			context.JSON(http.StatusBadRequest, err)
 			return
 		}
-
-		go services.Subscribe(&subscriptionBody)
 		context.JSON(http.StatusOK, "subscribed")
 	})
 }
