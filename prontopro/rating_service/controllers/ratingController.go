@@ -105,8 +105,8 @@ func ReviewRoutes(route *gin.Engine) {
 				Notification: fmt.Sprintf("New rating %d submitted by %s", review.Rating, review.User.Username),
 			}
 
-			err := util.SaveNotification(&notification)
-			if err != nil {
+			errNotif := util.SaveNotification(&notification)
+			if errNotif != nil {
 				log.Println("Something went wrong during saving notification ", err)
 			}
 		}()

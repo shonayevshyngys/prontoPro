@@ -2,6 +2,8 @@ package models
 
 import "gorm.io/gorm"
 
+//Rating models
+
 type User struct {
 	ID       uint   `gorm:"primaryKey" json:"id"`
 	Username string `json:"username" binding:"required"`
@@ -23,6 +25,8 @@ type Review struct {
 	ReviewText string   `json:"reviewText"`
 	Rating     uint8    `json:"rating" binding:"required"`
 }
+
+//Notification models
 
 type Notification struct {
 	gorm.Model

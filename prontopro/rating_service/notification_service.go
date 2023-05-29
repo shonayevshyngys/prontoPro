@@ -6,11 +6,11 @@ import (
 	"github.com/shonayevshyngys/prontopro/rating_service/database"
 	"github.com/shonayevshyngys/prontopro/rating_service/models"
 	"log"
-	"os"
 )
 
 func init() {
 	database.ConnectToDatabase()
+	database.ConnectToRedis()
 	var err error
 	err = database.Instance.AutoMigrate(&models.Notification{})
 	if err != nil {
@@ -19,8 +19,6 @@ func init() {
 }
 
 func main() {
-	log.Println(os.Getenv("DATASOURCE"))
-	log.Println(os.Getenv("PORT"))
 	r := gin.Default()
 	controllers.NotificationRoutes(r)
 	err := r.Run()
