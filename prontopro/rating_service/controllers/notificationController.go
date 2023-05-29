@@ -70,6 +70,7 @@ func NotificationRoutes(route *gin.Engine) {
 			context.JSON(http.StatusBadRequest, err)
 			return
 		}
-		context.JSON(http.StatusOK, "subscribed")
+		successMsg := util.SuccessMessage{Code: 200, Message: "subscribed"}
+		context.JSON(http.StatusOK, successMsg)
 	})
 }

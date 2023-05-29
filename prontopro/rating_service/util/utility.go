@@ -13,6 +13,11 @@ type ErrorMessage struct {
 	Code    uint
 	Message string
 }
+type SuccessMessage struct {
+	Code    uint
+	Message string
+}
+
 type Subscribers struct {
 	Ids map[int]string
 }
