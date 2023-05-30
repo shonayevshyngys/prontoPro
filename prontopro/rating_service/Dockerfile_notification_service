@@ -9,6 +9,6 @@ RUN go mod download
 
 COPY rating_service/. ./
 
-RUN go build notification_service.go
+RUN go build main.go
 
-CMD [ "./notification_service" ]
+CMD [ "./main" ]

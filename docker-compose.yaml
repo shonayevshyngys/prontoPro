@@ -46,6 +46,7 @@ services:
     environment:
       - DATASOURCE=host=postgres user=postgres password=postgres dbname=rating_service port=5432
       - PORT=7000
+      - APP=rating
     depends_on:
         postgres:
           condition: service_healthy
@@ -60,6 +61,7 @@ services:
     environment:
       - DATASOURCE=host=postgres user=postgres password=postgres dbname=rating_service port=5432
       - PORT=7001
+      - APP=notification
       - REDIS_URL=redis:6379
     depends_on:
       postgres:

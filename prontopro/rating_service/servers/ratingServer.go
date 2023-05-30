@@ -1,4 +1,4 @@
-package main
+package servers
 
 import (
 	"github.com/shonayevshyngys/prontopro/rating_service/controllers"
@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func init() {
+func InitNotificationService() {
 	//connection
 	database.ConnectToDatabase()
 
@@ -30,7 +30,7 @@ func init() {
 	}
 }
 
-func main() {
+func RunNotificationService() {
 	log.Println(os.Getenv("DATASOURCE"))
 	log.Println(os.Getenv("PORT"))
 	r := gin.Default()

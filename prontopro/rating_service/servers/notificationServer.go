@@ -1,4 +1,4 @@
-package main
+package servers
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func init() {
+func InitRatingServer() {
 	database.ConnectToDatabase()
 	database.ConnectToRedis()
 	var err error
@@ -18,7 +18,7 @@ func init() {
 	}
 }
 
-func main() {
+func RunRatingService() {
 	r := gin.Default()
 	controllers.NotificationRoutes(r)
 	err := r.Run()
