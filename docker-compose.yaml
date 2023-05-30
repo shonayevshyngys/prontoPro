@@ -11,7 +11,7 @@ services:
       - POSTGRES_DB=rating_service
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d rating_service -U postgres" ]
-      interval: 15s
+      interval: 5s
       timeout: 60s
       retries: 5
       start_period: 80s
@@ -20,7 +20,22 @@ services:
     image: redis:6.2-alpine
     restart: always
     ports:
-      - '6379:6379'
+      - "6379:6379"
+
+  proxy:
+    image: nginx
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+    ports:
+      - "80:80"
+    depends_on:
+      rating-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
 
   rating-service:
     build:
