@@ -10,9 +10,9 @@ import (
 )
 
 func NotificationRoutes(route *gin.Engine) {
-	notification := route.Group("")
+	notification := route.Group("/notification")
 
-	notification.POST("/notification", func(context *gin.Context) {
+	notification.POST("/", func(context *gin.Context) {
 		var notificationBody models.Notification
 		err := context.ShouldBindJSON(&notificationBody)
 		if err != nil {

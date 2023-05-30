@@ -14,11 +14,12 @@ import (
 
 const dbErrorText = "Something went wrong during saving to DB"
 const wrongBodyErrorText = "Wrong body"
+const baseUrl = "/rating"
 
 func UserRoutes(route *gin.Engine) {
-	user := route.Group("/user")
+	user := route.Group(baseUrl)
 
-	user.POST("", func(context *gin.Context) {
+	user.POST("/user", func(context *gin.Context) {
 		var userBody models.User
 		err := context.ShouldBindJSON(&userBody)
 		userBody.ID = 0
@@ -37,9 +38,9 @@ func UserRoutes(route *gin.Engine) {
 }
 
 func ProviderRoutes(route *gin.Engine) {
-	provider := route.Group("/provider")
+	provider := route.Group(baseUrl)
 
-	provider.POST("", func(context *gin.Context) {
+	provider.POST("/provider", func(context *gin.Context) {
 		var providerBody models.Provider
 		err := context.ShouldBindJSON(&providerBody)
 		if err != nil {
@@ -55,7 +56,7 @@ func ProviderRoutes(route *gin.Engine) {
 		}
 		context.JSON(http.StatusCreated, providerBody)
 	})
-	provider.GET("/:id", func(context *gin.Context) {
+	provider.GET("/provider/:id", func(context *gin.Context) {
 		var provider models.Provider
 		id, err := strconv.Atoi(context.Param("id"))
 		if err != nil || id < 1 {
@@ -76,9 +77,9 @@ func ProviderRoutes(route *gin.Engine) {
 }
 
 func ReviewRoutes(route *gin.Engine) {
-	rating := route.Group("/review")
+	rating := route.Group(baseUrl)
 
-	rating.POST("", func(context *gin.Context) {
+	rating.POST("/review", func(context *gin.Context) {
 		var reviewBody util.CreateReviewDTO
 		err := context.ShouldBindJSON(&reviewBody)
 		if err != nil || reviewBody.UserId < 1 || reviewBody.ProviderId < 1 {
@@ -115,8 +116,8 @@ func ReviewRoutes(route *gin.Engine) {
 }
 
 func CheckRoutes(route *gin.Engine) {
-	check := route.Group("/check")
-	check.GET("/:providerID/:userID", func(context *gin.Context) {
+	check := route.Group(baseUrl)
+	check.GET("/check/:providerID/:userID", func(context *gin.Context) {
 		providerId, err := strconv.Atoi(context.Param("providerID"))
 		if err != nil || providerId < 1 {
 			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}

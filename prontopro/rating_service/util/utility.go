@@ -41,7 +41,7 @@ func CheckIfUserAndProviderExists(provider int, user int) (bool, error) {
 
 	log.Println("Checking if user or provider exists")
 	//change later
-	url := fmt.Sprintf("http://rating-service:7000/check/%d/%d", provider, user)
+	url := fmt.Sprintf("http://rating-service:7000/rating/check/%d/%d", provider, user)
 	resp, err := http.Get(url)
 	if err != nil {
 		return false, err
