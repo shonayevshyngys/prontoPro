@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
 	"github.com/shonayevshyngys/prontopro/pkg/util"
 	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -80,7 +82,7 @@ func getNotifications(id int, key string) ([]models.Notification, error) {
 }
 
 func SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error {
-	exists, err := util.CheckIfUserAndProviderExists(provider, user)
+	exists, err := checkIfUserAndProviderExists(provider, user)
 	if err != nil {
 		log.Println("Couldn't verify if user/provider exists")
 		return err
@@ -112,4 +114,21 @@ func subscribe(subscriptionBody *util.SubscriptionBody) {
 		jsonIds, _ := json.Marshal(&subs)
 		database.RedisInstance.Set(database.RedisContext, key, jsonIds, 0)
 	}
+}
+
+func checkIfUserAndProviderExists(provider int, user int) (bool, error) {
+
+	log.Println("Checking if user or provider exists")
+	//change later
+	url := fmt.Sprintf("http://rating-service:7000/rating/check/%d/%d", provider, user)
+	resp, err := http.Get(url)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode == http.StatusOK {
+		return true, nil
+	} else {
+		return false, nil
+	}
+
 }
