@@ -17,6 +17,13 @@ func init() {
 	}
 }
 
+// @title ProntoPro
+// @version 1.0
+// @description This is a take home assignment for pronto pro
+
+// @host localhost:80
+// @BasePath /
+// @query.collection.format multi
 func main() {
 	r := gin.Default()
 	NotificationRoutes(r)

@@ -1,8 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/shonayevshyngys/prontopro/pkg/util"
+	"log"
+	"net/http"
 
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
@@ -60,5 +65,29 @@ func GetProvider(provider *models.Provider, id int) error {
 	var rating float32
 	database.Instance.Raw("SELECT AVG(Rating) FROM reviews WHERE provider_id = ?", provider.ID).Scan(&rating)
 	provider.Rating = rating
+	if provider.Rating != rating {
+		go database.Instance.Save(&provider)
+	}
 	return nil
+}
+
+func SendNotification(review *models.Review) {
+
+	notification := models.Notification{
+		ProviderID:   review.ProviderID,
+		Notification: fmt.Sprintf("New rating %d submitted by %s", review.Rating, review.User.Username),
+	}
+
+	something, err := json.Marshal(notification)
+	if err != nil {
+		log.Println("marshalling of object failed ", err)
+		return
+	}
+	log.Println("Sending request to notification service")
+	//change later
+	_, err = http.Post("http://notification-service:7001/notification", "application/json", bytes.NewBuffer(something))
+	if err != nil {
+		log.Println("Error on send to notification service ", err)
+		return
+	}
 }

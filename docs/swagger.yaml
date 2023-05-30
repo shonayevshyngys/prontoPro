@@ -1,0 +1,322 @@
+basePath: /
+definitions:
+  models.Notification:
+    properties:
+      notification:
+        type: string
+      providerID:
+        type: integer
+    type: object
+  models.Provider:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      rating:
+        type: number
+    required:
+    - description
+    - name
+    type: object
+  models.Review:
+    properties:
+      id:
+        type: integer
+      provider:
+        $ref: '#/definitions/models.Provider'
+      providerID:
+        type: integer
+      rating:
+        type: integer
+      reviewText:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      userID:
+        type: integer
+    required:
+    - rating
+    type: object
+  models.User:
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+    required:
+    - username
+    type: object
+  util.CreateReviewDTO:
+    properties:
+      providerId:
+        type: integer
+      rating:
+        type: integer
+      reviewText:
+        type: string
+      userId:
+        type: integer
+    required:
+    - providerId
+    - rating
+    - userId
+    type: object
+  util.ErrorMessage:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  util.SubscriptionBody:
+    properties:
+      providerId:
+        type: integer
+      userId:
+        type: integer
+    type: object
+  util.SuccessMessage:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+host: localhost:80
+info:
+  contact: {}
+  description: This is a take home assignment for pronto pro
+  title: ProntoPro
+  version: "1.0"
+paths:
+  /notification:
+    post:
+      operationId: createNotification
+      parameters:
+      - description: To create notification you need to pass providerId and notification
+          text
+        in: body
+        name: Notification
+        required: true
+        schema:
+          $ref: '#/definitions/models.Notification'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Notification'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Creates a notification object
+      tags:
+      - Internal
+  /notification/provider/{provider_id}:
+    get:
+      operationId: getProviderNotifications
+      parameters:
+      - description: id of a provider
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.SuccessMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Get provider's notification
+      tags:
+      - Notification
+  /notification/subscribe:
+    post:
+      operationId: Subscribe
+      parameters:
+      - description: Subscribes user to provider to get notifications
+        in: body
+        name: SubscriptionBody
+        required: true
+        schema:
+          $ref: '#/definitions/util.SubscriptionBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.SuccessMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Subscribes user to a provider
+      tags:
+      - Notification
+  /notification/user/{user_id}:
+    get:
+      operationId: getUserNotifications
+      parameters:
+      - description: id of a user
+        in: path
+        name: user_io
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.SuccessMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Get user's subbed notifications
+      tags:
+      - Notification
+  /rating/check/{provider_id}/{user_id}:
+    get:
+      operationId: check
+      parameters:
+      - description: id of a provider
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      - description: id of a user
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.SuccessMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: check if user and provider exists. It's needed for validation on notification
+        service. Only for internal usage
+      tags:
+      - Internal
+  /rating/provider:
+    post:
+      operationId: createProvider
+      parameters:
+      - description: Binding required only for name and description, id will be adjusted
+          by DB
+        in: body
+        name: Provider
+        required: true
+        schema:
+          $ref: '#/definitions/models.Provider'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Provider'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Creates a provider
+      tags:
+      - Rating
+  /rating/provider/{provider_id}:
+    get:
+      operationId: getProvider
+      parameters:
+      - description: id of a provider
+        in: path
+        name: provider_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Provider'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Gets a provider with average rating from review
+      tags:
+      - Rating
+  /rating/review:
+    post:
+      operationId: createReview
+      parameters:
+      - description: To create review you need to pass userId, providerId, text and
+          rating
+        in: body
+        name: Review
+        required: true
+        schema:
+          $ref: '#/definitions/util.CreateReviewDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Review'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Creates a review binded to user and provider
+      tags:
+      - Rating
+  /rating/user:
+    post:
+      operationId: createUser
+      parameters:
+      - description: Binding required only for username, id will be adjusted by DB
+        in: body
+        name: User
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorMessage'
+      summary: Creates a user
+      tags:
+      - Rating
+swagger: "2.0"

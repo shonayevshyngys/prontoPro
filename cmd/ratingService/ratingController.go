@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
 	"github.com/shonayevshyngys/prontopro/pkg/util"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -22,7 +20,9 @@ func UserRoutes(route *gin.Engine) {
 
 // @Summary Creates a user
 // @ID createUser
-// @Param User body models.User.Username true "Binding required only for username, id will be adjusted by DB".
+// @Tags Rating
+// @Produce json
+// @Param User body models.User true "Binding required only for username, id will be adjusted by DB".
 // @Success 201 {object} models.User
 // @Failure 400 {object} util.ErrorMessage
 // @Router /rating/user [post]
@@ -54,6 +54,8 @@ func ProviderRoutes(route *gin.Engine) {
 
 // @Summary Creates a provider
 // @ID createProvider
+// @Tags Rating
+// @Produce json
 // @Param Provider body models.Provider true "Binding required only for name and description, id will be adjusted by DB".
 // @Success 201 {object} models.Provider
 // @Failure 400 {object} util.ErrorMessage
@@ -81,12 +83,13 @@ func createProvider() gin.HandlerFunc {
 
 // @Summary Gets a provider with average rating from review
 // @ID getProvider
-// @Tags rating
+// @Tags Rating
+// @Produce json
 // @Param provider_id path int true "id of a provider"
 // @Success 200 {object} models.Provider
 // @Failure 400 {object} util.ErrorMessage
 // @Failure 404 {object} util.ErrorMessage
-// @Router /rating/{provider_id} [get]
+// @Router /rating/provider/{provider_id} [get]
 func getProvider() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		var provider models.Provider
@@ -111,8 +114,19 @@ func getProvider() gin.HandlerFunc {
 
 func ReviewRoutes(route *gin.Engine) {
 	rating := route.Group(baseUrl)
+	rating.POST("/review", createReview())
+}
 
-	rating.POST("/review", func(context *gin.Context) {
+// @Summary Creates a review binded to user and provider
+// @ID createReview
+// @Tags Rating
+// @Produce json
+// @Param Review body util.CreateReviewDTO true "To create review you need to pass userId, providerId, text and rating".
+// @Success 201 {object} models.Review
+// @Failure 400 {object} util.ErrorMessage
+// @Router /rating/review [post]
+func createReview() gin.HandlerFunc {
+	fn := func(context *gin.Context) {
 		var reviewBody util.CreateReviewDTO
 		err := context.ShouldBindJSON(&reviewBody)
 		if err != nil || reviewBody.UserId < 1 || reviewBody.ProviderId < 1 {
@@ -133,24 +147,27 @@ func ReviewRoutes(route *gin.Engine) {
 		}
 		context.JSON(http.StatusCreated, review)
 
-		go func() {
-
-			notification := models.Notification{
-				ProviderID:   review.ProviderID,
-				Notification: fmt.Sprintf("New rating %d submitted by %s", review.Rating, review.User.Username),
-			}
-
-			errNotif := util.SaveNotification(&notification)
-			if errNotif != nil {
-				log.Println("Something went wrong during saving notification ", err)
-			}
-		}()
-	})
+		go SendNotification(&review)
+	}
+	return fn
 }
 
 func CheckRoutes(route *gin.Engine) {
 	check := route.Group(baseUrl)
-	check.GET("/check/:providerID/:userID", func(context *gin.Context) {
+	check.GET("/check/:providerID/:userID", checkIfExists())
+}
+
+// @Summary check if user and provider exists. It's needed for validation on notification service. Only for internal usage
+// @ID check
+// @Tags Internal
+// @Param provider_id path int true "id of a provider"
+// @Param user_id path int true "id of a user"
+// @Success 200 {object} util.SuccessMessage
+// @Failure 400 {object} util.ErrorMessage
+// @Failure 404 {object} util.ErrorMessage
+// @Router /rating/check/{provider_id}/{user_id} [get]
+func checkIfExists() gin.HandlerFunc {
+	fn := func(context *gin.Context) {
 		providerId, err := strconv.Atoi(context.Param("providerID"))
 		if err != nil || providerId < 1 {
 			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
@@ -164,10 +181,13 @@ func CheckRoutes(route *gin.Engine) {
 			return
 		}
 		if database.ProviderExists(uint(providerId)) && database.UserExists(uint(userId)) {
-			context.JSON(http.StatusOK, "ok")
+			successMsg := util.SuccessMessage{Code: 200, Message: "Both exist in db"}
+			context.JSON(http.StatusOK, successMsg)
 			return
 		} else {
-			context.JSON(http.StatusBadRequest, "not ok")
+			errMsg := util.ErrorMessage{Code: 404, Message: "Not found"}
+			context.JSON(http.StatusBadRequest, errMsg)
 		}
-	})
+	}
+	return fn
 }

@@ -1,8 +1,11 @@
 package main
 
 import (
+	_ "github.com/shonayevshyngys/prontopro/docs"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"os"
 
@@ -29,10 +32,19 @@ func init() {
 	}
 }
 
+// @title ProntoPro
+// @version 1.0
+// @description This is a take home assignment for pronto pro
+
+// @host localhost:80
+// @BasePath /
+// @query.collection.format multi
+
 func main() {
 	log.Println(os.Getenv("DATASOURCE"))
 	log.Println(os.Getenv("PORT"))
 	r := gin.Default()
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	UserRoutes(r)
 	ProviderRoutes(r)
 	ReviewRoutes(r)
