@@ -1,11 +1,11 @@
-package services
+package main
 
 import (
 	"encoding/json"
 	"errors"
-	"github.com/shonayevshyngys/prontopro/rating_service/database"
-	"github.com/shonayevshyngys/prontopro/rating_service/models"
-	"github.com/shonayevshyngys/prontopro/rating_service/util"
+	"github.com/shonayevshyngys/prontopro/pkg/database"
+	"github.com/shonayevshyngys/prontopro/pkg/models"
+	"github.com/shonayevshyngys/prontopro/pkg/util"
 	"log"
 	"strconv"
 )
@@ -88,7 +88,6 @@ func SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionB
 	if !exists {
 		var res string
 		res = "user and/or provider doesn't exist"
-		log.Println(res)
 		return errors.New(res)
 	}
 	go subscribe(subBody)

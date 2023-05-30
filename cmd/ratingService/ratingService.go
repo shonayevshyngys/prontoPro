@@ -1,10 +1,11 @@
-package services
+package main
 
 import (
 	"errors"
-	"github.com/shonayevshyngys/prontopro/rating_service/database"
-	"github.com/shonayevshyngys/prontopro/rating_service/models"
-	"github.com/shonayevshyngys/prontopro/rating_service/util"
+	"github.com/shonayevshyngys/prontopro/pkg/util"
+
+	"github.com/shonayevshyngys/prontopro/pkg/database"
+	"github.com/shonayevshyngys/prontopro/pkg/models"
 )
 
 const objectNotCreatedErrorText = "object wasn't created"
@@ -21,6 +22,10 @@ func CreateUser(user *models.User) error {
 func CreateProvider(provider *models.Provider) error {
 	provider.ID = 0
 	provider.Rating = 0
+	if provider.Name == "" || provider.Description == "" {
+		return errors.New(objectNotCreatedErrorText)
+	}
+
 	database.Instance.Create(&provider)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)

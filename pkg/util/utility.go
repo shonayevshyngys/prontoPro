@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/shonayevshyngys/prontopro/rating_service/models"
+	"github.com/shonayevshyngys/prontopro/pkg/models"
 	"log"
 	"net/http"
 )
@@ -21,6 +21,8 @@ type SuccessMessage struct {
 type Subscribers struct {
 	Ids map[int]string
 }
+
+const BadIdText = "Bad format for id"
 
 func SaveNotification(notification *models.Notification) error {
 	something, err := json.Marshal(notification)

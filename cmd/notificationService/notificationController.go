@@ -1,13 +1,14 @@
-package controllers
+package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/shonayevshyngys/prontopro/rating_service/models"
-	"github.com/shonayevshyngys/prontopro/rating_service/services"
-	"github.com/shonayevshyngys/prontopro/rating_service/util"
+	"github.com/shonayevshyngys/prontopro/pkg/models"
+	"github.com/shonayevshyngys/prontopro/pkg/util"
 	"net/http"
 	"strconv"
 )
+
+const wrongBodyErrorText = "Wrong body"
 
 func NotificationRoutes(route *gin.Engine) {
 	notification := route.Group("/notification")
@@ -20,7 +21,7 @@ func NotificationRoutes(route *gin.Engine) {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		services.SaveNotification(&notificationBody)
+		SaveNotification(&notificationBody)
 		context.JSON(http.StatusCreated, notificationBody)
 	})
 
@@ -28,11 +29,11 @@ func NotificationRoutes(route *gin.Engine) {
 
 		id, err := strconv.Atoi(context.Param("id"))
 		if err != nil || id < 1 {
-			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			errMsg := util.ErrorMessage{Code: 400, Message: util.BadIdText}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := services.GetProviderNotifications(id)
+		notifications, err := GetProviderNotifications(id)
 		if err != nil || len(notifications) == 0 {
 			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)
@@ -44,11 +45,11 @@ func NotificationRoutes(route *gin.Engine) {
 	notification.GET("/user/:id", func(context *gin.Context) {
 		id, err := strconv.Atoi(context.Param("id"))
 		if err != nil || id < 1 {
-			errMsg := util.ErrorMessage{Code: 400, Message: "Bad format for id"}
+			errMsg := util.ErrorMessage{Code: 400, Message: util.BadIdText}
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := services.GetUserNotifications(id)
+		notifications, err := GetUserNotifications(id)
 		if err != nil || len(notifications) == 0 {
 			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)
@@ -65,7 +66,7 @@ func NotificationRoutes(route *gin.Engine) {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = services.SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
+		err = SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
 		if err != nil {
 			context.JSON(http.StatusBadRequest, err)
 			return

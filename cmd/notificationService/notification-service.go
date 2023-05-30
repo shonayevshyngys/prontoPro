@@ -1,14 +1,13 @@
-package servers
+package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/shonayevshyngys/prontopro/rating_service/controllers"
-	"github.com/shonayevshyngys/prontopro/rating_service/database"
-	"github.com/shonayevshyngys/prontopro/rating_service/models"
+	"github.com/shonayevshyngys/prontopro/pkg/database"
+	"github.com/shonayevshyngys/prontopro/pkg/models"
 	"log"
 )
 
-func InitRatingServer() {
+func init() {
 	database.ConnectToDatabase()
 	database.ConnectToRedis()
 	var err error
@@ -18,9 +17,9 @@ func InitRatingServer() {
 	}
 }
 
-func RunRatingService() {
+func main() {
 	r := gin.Default()
-	controllers.NotificationRoutes(r)
+	NotificationRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)
