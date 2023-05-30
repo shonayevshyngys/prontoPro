@@ -26,7 +26,7 @@ services:
     image: nginx
     volumes:
       - type: bind
-        source: ./nginx.conf
+        source: ../configs/nginx.conf
         target: /etc/nginx/nginx.conf
         read_only: true
     ports:
@@ -39,8 +39,8 @@ services:
 
   rating-service:
     build:
-      context: prontopro
-      dockerfile: ./rating_service/Dockerfile_rating_service
+      context: ..
+      dockerfile: build/Dockerfile_rating_service
     ports:
       - "7000:7000"
     environment:
@@ -53,8 +53,8 @@ services:
 
   notification-service:
     build:
-      context: prontopro
-      dockerfile: ./rating_service/Dockerfile_notification_service
+      context: ..
+      dockerfile: build/Dockerfile_notification_service
     ports:
       - "7001:7001"
     environment:

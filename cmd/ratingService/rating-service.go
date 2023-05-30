@@ -1,9 +1,8 @@
 package main
 
 import (
-	"github.com/shonayevshyngys/prontopro/rating_service/controllers"
-	"github.com/shonayevshyngys/prontopro/rating_service/database"
-	"github.com/shonayevshyngys/prontopro/rating_service/models"
+	"github.com/shonayevshyngys/prontopro/pkg/database"
+	"github.com/shonayevshyngys/prontopro/pkg/models"
 	"log"
 	"os"
 
@@ -34,10 +33,10 @@ func main() {
 	log.Println(os.Getenv("DATASOURCE"))
 	log.Println(os.Getenv("PORT"))
 	r := gin.Default()
-	controllers.UserRoutes(r)
-	controllers.ProviderRoutes(r)
-	controllers.ReviewRoutes(r)
-	controllers.CheckRoutes(r)
+	UserRoutes(r)
+	ProviderRoutes(r)
+	ReviewRoutes(r)
+	CheckRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)
