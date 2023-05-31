@@ -12,7 +12,25 @@ import (
 	"strconv"
 )
 
-func SaveNotification(notification *models.Notification) {
+func GetNotificationService() NotificationService {
+	var service = NotificationService{}
+	return service
+}
+
+type NotificationService struct {
+}
+
+type NotificationServiceInterface interface {
+	SaveNotification(notification *models.Notification)
+	sendNotificationToSubbedUsers(id uint, jsonBody []byte)
+	GetProviderNotifications(id int) ([]models.Notification, error)
+	GetUserNotifications(id int) ([]models.Notification, error)
+	getNotifications(id int, key string) ([]models.Notification, error)
+	SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error
+	checkIfUserAndProviderExists(provider int, user int) (bool, error)
+}
+
+func (service *NotificationService) SaveNotification(notification *models.Notification) {
 	database.Instance.Create(&notification)
 
 	jsonBody, err := json.Marshal(notification)
@@ -24,19 +42,21 @@ func SaveNotification(notification *models.Notification) {
 		"ProviderID_"+strconv.Itoa(int(notification.ProviderID)),
 		jsonBody,
 	)
-	go sendNotificationToSubbedUsers(notification.ProviderID, jsonBody)
+	go service.sendNotificationToSubbedUsers(notification.ProviderID, jsonBody)
 }
 
-func sendNotificationToSubbedUsers(id uint, jsonBody []byte) {
+func (service *NotificationService) sendNotificationToSubbedUsers(id uint, jsonBody []byte) {
 	res, err := database.RedisInstance.Get(database.RedisContext,
 		"ProviderID_"+strconv.Itoa(int(id))+"_subs").Result()
 	if err != nil {
 		log.Printf("Provider %d doesnt have subscirbers\n", id)
+		return
 	}
 	var subscribers util.Subscribers
 	err = json.Unmarshal([]byte(res), &subscribers)
 	if err != nil {
 		log.Println("Something went wrong on parsing")
+		return
 	}
 	for key, _ := range subscribers.Ids {
 		var redisKey string
@@ -51,19 +71,19 @@ func sendNotificationToSubbedUsers(id uint, jsonBody []byte) {
 
 }
 
-func GetProviderNotifications(id int) ([]models.Notification, error) {
+func (service *NotificationService) GetProviderNotifications(id int) ([]models.Notification, error) {
 	key := "ProviderID_" + strconv.Itoa(id)
-	notificaitons, err := getNotifications(id, key)
+	notificaitons, err := service.getNotifications(id, key)
 	return notificaitons, err
 }
 
-func GetUserNotifications(id int) ([]models.Notification, error) {
+func (service *NotificationService) GetUserNotifications(id int) ([]models.Notification, error) {
 	key := "UserID_" + strconv.Itoa(id)
-	notificaitons, err := getNotifications(id, key)
+	notificaitons, err := service.getNotifications(id, key)
 	return notificaitons, err
 }
 
-func getNotifications(id int, key string) ([]models.Notification, error) {
+func (service *NotificationService) getNotifications(id int, key string) ([]models.Notification, error) {
 	stringNotifications, err := database.RedisInstance.LRange(database.RedisContext, key, 0, -1).Result()
 	if err != nil || len(stringNotifications) == 0 {
 		return nil, err
@@ -81,8 +101,8 @@ func getNotifications(id int, key string) ([]models.Notification, error) {
 	return notificaitons, err
 }
 
-func SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error {
-	exists, err := checkIfUserAndProviderExists(provider, user)
+func (service *NotificationService) SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error {
+	exists, err := service.checkIfUserAndProviderExists(provider, user)
 	if err != nil {
 		log.Println("Couldn't verify if user/provider exists")
 		return err
@@ -116,7 +136,7 @@ func subscribe(subscriptionBody *util.SubscriptionBody) {
 	}
 }
 
-func checkIfUserAndProviderExists(provider int, user int) (bool, error) {
+func (service *NotificationService) checkIfUserAndProviderExists(provider int, user int) (bool, error) {
 
 	log.Println("Checking if user or provider exists")
 	//change later

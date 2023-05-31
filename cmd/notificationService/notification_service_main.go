@@ -26,7 +26,8 @@ func init() {
 // @query.collection.format multi
 func main() {
 	r := gin.Default()
-	NotificationRoutes(r)
+	var controller = GetNotificationController()
+	controller.NotificationRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)

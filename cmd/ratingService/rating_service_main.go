@@ -4,8 +4,6 @@ import (
 	_ "github.com/shonayevshyngys/prontopro/docs"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"os"
 
@@ -44,11 +42,12 @@ func main() {
 	log.Println(os.Getenv("DATASOURCE"))
 	log.Println(os.Getenv("PORT"))
 	r := gin.Default()
-	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	UserRoutes(r)
-	ProviderRoutes(r)
-	ReviewRoutes(r)
-	CheckRoutes(r)
+
+	controller := GetRatingController()
+	controller.checkRoutes(r)
+	controller.providerRoutes(r)
+	controller.reviewRoutes(r)
+	controller.userRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)
