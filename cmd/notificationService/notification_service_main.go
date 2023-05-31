@@ -11,7 +11,7 @@ func init() {
 	database.ConnectToDatabase()
 	database.ConnectToRedis()
 	var err error
-	err = database.Instance.AutoMigrate(&models.Notification{})
+	err = database.DataBase.Instance.AutoMigrate(&models.Notification{})
 	if err != nil {
 		log.Fatal("Notification table wasn't created")
 	}

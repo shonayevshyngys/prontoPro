@@ -31,7 +31,7 @@ type ratingServiceInterface interface {
 
 func (r *RatingService) createUser(user *models.User) error {
 	user.ID = 0
-	database.Instance.Create(&user)
+	database.DataBase.CreateUser(user)
 	if user.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
@@ -45,7 +45,7 @@ func (r *RatingService) createProvider(provider *models.Provider) error {
 		return errors.New(objectNotCreatedErrorText)
 	}
 
-	database.Instance.Create(&provider)
+	database.DataBase.CreateProvider(provider)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
@@ -59,28 +59,28 @@ func (r *RatingService) createReview(reviewDTO *util.CreateReviewDTO) (models.Re
 		UserID:     reviewDTO.UserId,
 		ProviderID: reviewDTO.ProviderId,
 	}
-	if !database.UserExists(review.UserID) || !database.ProviderExists(review.ProviderID) {
+	if !database.DataBase.UserExists(review.UserID) || !database.DataBase.ProviderExists(review.ProviderID) {
 		return review, errors.New("user or provider doesn't exist")
 	}
-	database.Instance.Create(&review)
+	database.DataBase.CreateReview(&review)
 	if review.ID == 0 {
 		return review, errors.New(objectNotCreatedErrorText)
 	}
-	database.Instance.Preload("User").Preload("Provider").Find(&review, review.ID)
+	database.DataBase.GetReview(&review, review.ID)
 
 	return review, nil
 }
 
 func (r *RatingService) getProvider(provider *models.Provider, id int) error {
-	database.Instance.Find(&provider, id)
+	database.DataBase.GetProvider(provider, id)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
 	var rating float32
-	database.Instance.Raw("SELECT AVG(Rating) FROM reviews WHERE provider_id = ?", provider.ID).Scan(&rating)
+	database.DataBase.FetchAverageRating(provider.ID, &rating)
 	provider.Rating = rating
 	if provider.Rating != rating {
-		go database.Instance.Save(&provider)
+		go database.DataBase.UpdateProvider(provider)
 	}
 	return nil
 }

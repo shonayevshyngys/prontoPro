@@ -12,9 +12,63 @@ import (
 	"gorm.io/gorm"
 )
 
-var Instance *gorm.DB
+var DataBase DB
 var RedisInstance *redis.Client
 var RedisContext context.Context
+
+type DB struct {
+	Instance *gorm.DB
+}
+
+type DBInterface interface {
+	CreateUser(user *models.User)
+	CreateProvider(provider *models.Provider)
+	CreateReview(review *models.Review)
+	CreateNotification(notification models.Notification)
+	GetUser(user *models.User, id int)
+	GetProvider(provider *models.Provider, id int)
+	GetReview(review *models.Review, id uint)
+	UpdateProvider(provider *models.Provider)
+	FetchAverageRating(id uint, rating *float32)
+	UserExists(id uint) bool
+	ProviderExists(id uint) bool
+}
+
+func (d *DB) CreateNotification(notification *models.Notification) {
+	d.Instance.Create(&notification)
+}
+
+func (d *DB) CreateUser(user *models.User) {
+	d.Instance.Create(&user)
+}
+
+func (d *DB) CreateProvider(provider *models.Provider) {
+	d.Instance.Create(&provider)
+}
+
+func (d *DB) CreateReview(review *models.Review) {
+	d.Instance.Create(&review)
+}
+
+func (d *DB) GetUser(user *models.User, id int) {
+	d.Instance.Find(&user, id)
+}
+
+func (d *DB) GetProvider(provider *models.Provider, id int) {
+	d.Instance.Find(&provider, id)
+}
+
+func (d *DB) GetReview(review *models.Review, id uint) {
+	d.Instance.Preload("User").Preload("Provider").Find(&review, review.ID)
+}
+
+func (d *DB) UpdateProvider(provider *models.Provider) {
+	d.Instance.Save(&provider)
+}
+
+func (d *DB) FetchAverageRating(id uint, rating *float32) {
+	d.Instance.Raw("SELECT AVG(Rating) FROM reviews WHERE provider_id = ?", id).Scan(&rating)
+}
 
 func ConnectToDatabase() {
 
@@ -26,7 +80,9 @@ func ConnectToDatabase() {
 		log.Fatal("Failed connect to database ", err)
 	}
 	db.Set("gorm:auto_preload", true)
-	Instance = db // newer version of golang forces this
+	DataBase = DB{
+		Instance: db,
+	}
 }
 
 func ConnectToRedis() {
@@ -39,18 +95,18 @@ func ConnectToRedis() {
 	RedisContext = context.Background()
 }
 
-func UserExists(id uint) bool {
+func (d *DB) UserExists(id uint) bool {
 	var user models.User
-	Instance.First(&user, id)
+	d.Instance.First(&user, id)
 	if user.ID == 0 {
 		return false
 	}
 	return true
 }
 
-func ProviderExists(id uint) bool {
+func (d *DB) ProviderExists(id uint) bool {
 	var provider models.Provider
-	Instance.First(&provider, id)
+	d.Instance.First(&provider, id)
 	if provider.ID == 0 {
 		return false
 	}

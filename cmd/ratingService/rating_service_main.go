@@ -16,15 +16,15 @@ func init() {
 
 	//This one is created only for local testing, for persistent db should be deleted
 	var err error
-	err = database.Instance.AutoMigrate(&models.Provider{})
+	err = database.DataBase.Instance.AutoMigrate(&models.Provider{})
 	if err != nil {
 		log.Fatal("Provider table wasn't created")
 	}
-	err = database.Instance.AutoMigrate(&models.User{})
+	err = database.DataBase.Instance.AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatal("User table wasn't created")
 	}
-	err = database.Instance.AutoMigrate(&models.Review{})
+	err = database.DataBase.Instance.AutoMigrate(&models.Review{})
 	if err != nil {
 		log.Fatal("Review table wasn't created")
 	}

@@ -31,7 +31,7 @@ type NotificationServiceInterface interface {
 }
 
 func (service *NotificationService) SaveNotification(notification *models.Notification) {
-	database.Instance.Create(&notification)
+	database.DataBase.CreateNotification(notification)
 
 	jsonBody, err := json.Marshal(notification)
 	if err != nil {
