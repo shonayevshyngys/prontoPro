@@ -17,7 +17,8 @@ func GetNotificationHandler() NotificationHandler {
 }
 
 type NotificationHandler struct {
-	service NotificationServiceInterface
+	service notificationServiceInterface
+	NotificationHandlerInterface
 }
 
 type NotificationHandlerInterface interface {
@@ -44,7 +45,7 @@ func (h *NotificationHandler) createNotification() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		h.service.SaveNotification(&notificationBody)
+		h.service.saveNotification(&notificationBody)
 		context.JSON(http.StatusCreated, notificationBody)
 	}
 	return fn
@@ -67,7 +68,7 @@ func (h *NotificationHandler) subscribeUserToProvider() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = h.service.SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
+		err = h.service.subscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
 		if err != nil {
 			context.JSON(http.StatusBadRequest, err)
 			return
@@ -94,7 +95,7 @@ func (h *NotificationHandler) getProviderNotification() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := h.service.GetProviderNotifications(id)
+		notifications, err := h.service.getProviderNotifications(id)
 		if err != nil || len(notifications) == 0 {
 			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)
@@ -109,7 +110,7 @@ func (h *NotificationHandler) getProviderNotification() gin.HandlerFunc {
 // @ID getUserNotifications
 // @Tags Notification
 // @Produce json
-// @Param user_io path int true "id of a user"
+// @Param user_id path int true "id of a user"
 // @Success 200 {object} util.SuccessMessage
 // @Failure 400 {object} util.ErrorMessage
 // @Router /notification/user/{user_id} [get]
@@ -121,9 +122,9 @@ func (h *NotificationHandler) getUserNotifications() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := h.service.GetUserNotifications(id)
+		notifications, err := h.service.getUserNotifications(id)
 		if err != nil || len(notifications) == 0 {
-			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
+			errMsg := util.ErrorMessage{Code: 404, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)
 			return
 		}

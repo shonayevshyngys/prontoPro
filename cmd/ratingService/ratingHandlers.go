@@ -15,7 +15,8 @@ func GetRatingHandler() RatingHandler {
 }
 
 type RatingHandler struct {
-	service ratingServiceInterface
+	service RatingServiceInterface
+	ratingHandlerInterface
 }
 
 type ratingHandlerInterface interface {
@@ -173,7 +174,7 @@ func (r *RatingHandler) checkIfExists() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		if database.DataBase.ProviderExists(uint(providerId)) && database.DataBase.UserExists(uint(userId)) {
+		if database.DataBase.DBInterface.ProviderExists(uint(providerId)) && database.DataBase.DBInterface.UserExists(uint(userId)) {
 			successMsg := util.SuccessMessage{Code: 200, Message: "Both exist in db"}
 			context.JSON(http.StatusOK, successMsg)
 			return

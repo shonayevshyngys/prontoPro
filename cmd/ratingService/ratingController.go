@@ -15,6 +15,7 @@ func GetRatingController() RatingController {
 
 type RatingController struct {
 	handlers ratingHandlerInterface
+	RatingControllerInterface
 }
 
 type RatingControllerInterface interface {

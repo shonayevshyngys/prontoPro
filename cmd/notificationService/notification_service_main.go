@@ -7,11 +7,11 @@ import (
 	"log"
 )
 
-func init() {
+func setup() {
 	database.ConnectToDatabase()
 	database.ConnectToRedis()
 	var err error
-	err = database.DataBase.Instance.AutoMigrate(&models.Notification{})
+	err = database.GormInstance.AutoMigrate(&models.Notification{})
 	if err != nil {
 		log.Fatal("Notification table wasn't created")
 	}
@@ -25,6 +25,7 @@ func init() {
 // @BasePath /
 // @query.collection.format multi
 func main() {
+	setup()
 	r := gin.Default()
 	var controller = GetNotificationController()
 	controller.NotificationRoutes(r)

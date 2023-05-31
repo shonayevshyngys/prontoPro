@@ -14,6 +14,7 @@ func GetNotificationController() NotificationController {
 
 type NotificationController struct {
 	handlers NotificationHandlerInterface
+	NotificationControllerInterface
 }
 
 type NotificationControllerInterface interface {

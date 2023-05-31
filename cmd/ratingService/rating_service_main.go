@@ -10,21 +10,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func init() {
+func setup() {
 	//connection
 	database.ConnectToDatabase()
 
 	//This one is created only for local testing, for persistent db should be deleted
 	var err error
-	err = database.DataBase.Instance.AutoMigrate(&models.Provider{})
+	err = database.GormInstance.AutoMigrate(&models.Provider{})
 	if err != nil {
 		log.Fatal("Provider table wasn't created")
 	}
-	err = database.DataBase.Instance.AutoMigrate(&models.User{})
+	err = database.GormInstance.AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatal("User table wasn't created")
 	}
-	err = database.DataBase.Instance.AutoMigrate(&models.Review{})
+	err = database.GormInstance.AutoMigrate(&models.Review{})
 	if err != nil {
 		log.Fatal("Review table wasn't created")
 	}
@@ -39,6 +39,7 @@ func init() {
 // @query.collection.format multi
 
 func main() {
+	setup()
 	log.Println(os.Getenv("DATASOURCE"))
 	log.Println(os.Getenv("PORT"))
 	r := gin.Default()

@@ -170,7 +170,7 @@ paths:
       parameters:
       - description: id of a user
         in: path
-        name: user_io
+        name: user_id
         required: true
         type: integer
       produces:

@@ -13,32 +13,32 @@ import (
 )
 
 func GetNotificationService() NotificationService {
-	var service = NotificationService{}
-	return service
+	return NotificationService{}
 }
 
 type NotificationService struct {
+	notificationServiceInterface
 }
 
-type NotificationServiceInterface interface {
-	SaveNotification(notification *models.Notification)
+type notificationServiceInterface interface {
+	saveNotification(notification *models.Notification)
 	sendNotificationToSubbedUsers(id uint, jsonBody []byte)
-	GetProviderNotifications(id int) ([]models.Notification, error)
-	GetUserNotifications(id int) ([]models.Notification, error)
+	getProviderNotifications(id int) ([]models.Notification, error)
+	getUserNotifications(id int) ([]models.Notification, error)
 	getNotifications(id int, key string) ([]models.Notification, error)
-	SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error
+	subscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error
 	checkIfUserAndProviderExists(provider int, user int) (bool, error)
 }
 
-func (service *NotificationService) SaveNotification(notification *models.Notification) {
-	database.DataBase.CreateNotification(notification)
+func (service *NotificationService) saveNotification(notification *models.Notification) {
+	database.DataBase.DBInterface.CreateNotification(notification)
 
 	jsonBody, err := json.Marshal(notification)
 	if err != nil {
 		log.Println("body wasn't persisted to redis", err)
 		return
 	}
-	go database.RedisInstance.RPush(database.RedisContext,
+	go database.RedisBase.RedisInterface.RPush(
 		"ProviderID_"+strconv.Itoa(int(notification.ProviderID)),
 		jsonBody,
 	)
@@ -46,8 +46,7 @@ func (service *NotificationService) SaveNotification(notification *models.Notifi
 }
 
 func (service *NotificationService) sendNotificationToSubbedUsers(id uint, jsonBody []byte) {
-	res, err := database.RedisInstance.Get(database.RedisContext,
-		"ProviderID_"+strconv.Itoa(int(id))+"_subs").Result()
+	res, err := database.RedisBase.RedisInterface.Get("ProviderID_" + strconv.Itoa(int(id)) + "_subs")
 	if err != nil {
 		log.Printf("Provider %d doesnt have subscirbers\n", id)
 		return
@@ -62,7 +61,7 @@ func (service *NotificationService) sendNotificationToSubbedUsers(id uint, jsonB
 		var redisKey string
 		redisKey = "UserID_" + strconv.Itoa(key)
 		go func() {
-			_, err := database.RedisInstance.RPush(database.RedisContext, redisKey, jsonBody).Result()
+			_, err := database.RedisBase.RedisInterface.RPush(redisKey, jsonBody)
 			if err != nil {
 				log.Println("failed to persist to redis", err)
 			}
@@ -71,20 +70,20 @@ func (service *NotificationService) sendNotificationToSubbedUsers(id uint, jsonB
 
 }
 
-func (service *NotificationService) GetProviderNotifications(id int) ([]models.Notification, error) {
+func (service *NotificationService) getProviderNotifications(id int) ([]models.Notification, error) {
 	key := "ProviderID_" + strconv.Itoa(id)
 	notificaitons, err := service.getNotifications(id, key)
 	return notificaitons, err
 }
 
-func (service *NotificationService) GetUserNotifications(id int) ([]models.Notification, error) {
+func (service *NotificationService) getUserNotifications(id int) ([]models.Notification, error) {
 	key := "UserID_" + strconv.Itoa(id)
 	notificaitons, err := service.getNotifications(id, key)
 	return notificaitons, err
 }
 
 func (service *NotificationService) getNotifications(id int, key string) ([]models.Notification, error) {
-	stringNotifications, err := database.RedisInstance.LRange(database.RedisContext, key, 0, -1).Result()
+	stringNotifications, err := database.RedisBase.RedisInterface.LRange(key)
 	if err != nil || len(stringNotifications) == 0 {
 		return nil, err
 	}
@@ -97,11 +96,11 @@ func (service *NotificationService) getNotifications(id int, key string) ([]mode
 		}
 		notificaitons = append(notificaitons, temp)
 	}
-	go database.RedisInstance.Del(database.RedisContext, key)
+	go database.RedisBase.RedisInterface.Del(key)
 	return notificaitons, err
 }
 
-func (service *NotificationService) SubscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error {
+func (service *NotificationService) subscribeUserToProvider(provider int, user int, subBody *util.SubscriptionBody) error {
 	exists, err := service.checkIfUserAndProviderExists(provider, user)
 	if err != nil {
 		log.Println("Couldn't verify if user/provider exists")
@@ -118,12 +117,12 @@ func (service *NotificationService) SubscribeUserToProvider(provider int, user i
 
 func subscribe(subscriptionBody *util.SubscriptionBody) {
 	key := "ProviderID_" + strconv.Itoa(subscriptionBody.ProviderId) + "_subs"
-	res, err := database.RedisInstance.Get(database.RedisContext, key).Result()
+	res, err := database.RedisBase.RedisInterface.Get(key)
 	if err != nil {
 		ids := make(map[int]string)
 		ids[subscriptionBody.UserId] = "subbed" //it's Golang way for set, the values are not needed.
 		jsonIds, _ := json.Marshal(&util.Subscribers{Ids: ids})
-		database.RedisInstance.Set(database.RedisContext, key, jsonIds, 0)
+		database.RedisBase.RedisInterface.Set(key, jsonIds)
 	} else {
 		var subs util.Subscribers
 		errJson := json.Unmarshal([]byte(res), &subs)
@@ -132,7 +131,7 @@ func subscribe(subscriptionBody *util.SubscriptionBody) {
 		}
 		subs.Ids[subscriptionBody.UserId] = "Subbed"
 		jsonIds, _ := json.Marshal(&subs)
-		database.RedisInstance.Set(database.RedisContext, key, jsonIds, 0)
+		database.RedisBase.RedisInterface.Set(key, jsonIds)
 	}
 }
 

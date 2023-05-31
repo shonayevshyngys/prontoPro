@@ -19,9 +19,11 @@ func GetRatingService() RatingService {
 	return RatingService{}
 }
 
-type RatingService struct{}
+type RatingService struct {
+	RatingServiceInterface
+}
 
-type ratingServiceInterface interface {
+type RatingServiceInterface interface {
 	createUser(user *models.User) error
 	createProvider(provider *models.Provider) error
 	createReview(reviewDTO *util.CreateReviewDTO) (models.Review, error)
@@ -31,7 +33,7 @@ type ratingServiceInterface interface {
 
 func (r *RatingService) createUser(user *models.User) error {
 	user.ID = 0
-	database.DataBase.CreateUser(user)
+	database.DataBase.DBInterface.CreateUser(user)
 	if user.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
@@ -45,7 +47,7 @@ func (r *RatingService) createProvider(provider *models.Provider) error {
 		return errors.New(objectNotCreatedErrorText)
 	}
 
-	database.DataBase.CreateProvider(provider)
+	database.DataBase.DBInterface.CreateProvider(provider)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
@@ -59,28 +61,28 @@ func (r *RatingService) createReview(reviewDTO *util.CreateReviewDTO) (models.Re
 		UserID:     reviewDTO.UserId,
 		ProviderID: reviewDTO.ProviderId,
 	}
-	if !database.DataBase.UserExists(review.UserID) || !database.DataBase.ProviderExists(review.ProviderID) {
+	if !database.DataBase.DBInterface.UserExists(review.UserID) || !database.DataBase.DBInterface.ProviderExists(review.ProviderID) {
 		return review, errors.New("user or provider doesn't exist")
 	}
-	database.DataBase.CreateReview(&review)
+	database.DataBase.DBInterface.CreateReview(&review)
 	if review.ID == 0 {
 		return review, errors.New(objectNotCreatedErrorText)
 	}
-	database.DataBase.GetReview(&review, review.ID)
+	database.DataBase.DBInterface.GetReview(&review, review.ID)
 
 	return review, nil
 }
 
 func (r *RatingService) getProvider(provider *models.Provider, id int) error {
-	database.DataBase.GetProvider(provider, id)
+	database.DataBase.DBInterface.GetProvider(provider, id)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
 	var rating float32
-	database.DataBase.FetchAverageRating(provider.ID, &rating)
+	database.DataBase.DBInterface.FetchAverageRating(provider.ID, &rating)
 	provider.Rating = rating
 	if provider.Rating != rating {
-		go database.DataBase.UpdateProvider(provider)
+		go database.DataBase.DBInterface.UpdateProvider(provider)
 	}
 	return nil
 }
