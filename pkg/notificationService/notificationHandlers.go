@@ -1,4 +1,4 @@
-package main
+package notificationService
 
 import (
 	"github.com/gin-gonic/gin"
@@ -32,7 +32,7 @@ type NotificationHandlerInterface interface {
 // @ID createNotification
 // @Tags Internal
 // @Produce json
-// @Param Notification body models.Notification true "To create notification you need to pass providerId and notification text".
+// @Param Notification body models.Notification true "To create notification you need to pass providerId and notification text. Only for internal usage".
 // @Success 201 {object} models.Notification
 // @Failure 400 {object} util.ErrorMessage
 // @Router /notification [post]
@@ -45,7 +45,7 @@ func (h *NotificationHandler) createNotification() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		h.service.saveNotification(&notificationBody)
+		h.service.SaveNotification(&notificationBody)
 		context.JSON(http.StatusCreated, notificationBody)
 	}
 	return fn
@@ -68,7 +68,7 @@ func (h *NotificationHandler) subscribeUserToProvider() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = h.service.subscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
+		err = h.service.SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
 		if err != nil {
 			context.JSON(http.StatusBadRequest, err)
 			return
@@ -80,7 +80,7 @@ func (h *NotificationHandler) subscribeUserToProvider() gin.HandlerFunc {
 }
 
 // @Summary Get provider's notification
-// @ID getProviderNotifications
+// @ID GetProviderNotifications
 // @Tags Notification
 // @Produce json
 // @Param provider_id path int true "id of a provider"
@@ -95,7 +95,7 @@ func (h *NotificationHandler) getProviderNotification() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := h.service.getProviderNotifications(id)
+		notifications, err := h.service.GetProviderNotifications(id)
 		if err != nil || len(notifications) == 0 {
 			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)
@@ -122,7 +122,7 @@ func (h *NotificationHandler) getUserNotifications() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := h.service.getUserNotifications(id)
+		notifications, err := h.service.GetUserNotifications(id)
 		if err != nil || len(notifications) == 0 {
 			errMsg := util.ErrorMessage{Code: 404, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)

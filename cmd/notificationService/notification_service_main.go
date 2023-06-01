@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
+	"github.com/shonayevshyngys/prontopro/pkg/notificationService"
 	"log"
 )
 
@@ -27,7 +28,7 @@ func setup() {
 func main() {
 	setup()
 	r := gin.Default()
-	var controller = GetNotificationController()
+	var controller = notificationService.GetNotificationController()
 	controller.NotificationRoutes(r)
 	err := r.Run()
 	if err != nil {

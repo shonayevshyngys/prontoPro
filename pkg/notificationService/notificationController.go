@@ -1,4 +1,4 @@
-package main
+package notificationService
 
 import (
 	"github.com/gin-gonic/gin"

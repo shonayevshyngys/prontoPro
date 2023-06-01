@@ -4,6 +4,7 @@ import (
 	_ "github.com/shonayevshyngys/prontopro/docs"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
+	"github.com/shonayevshyngys/prontopro/pkg/ratingService"
 	"log"
 	"os"
 
@@ -44,11 +45,11 @@ func main() {
 	log.Println(os.Getenv("PORT"))
 	r := gin.Default()
 
-	controller := GetRatingController()
-	controller.checkRoutes(r)
-	controller.providerRoutes(r)
-	controller.reviewRoutes(r)
-	controller.userRoutes(r)
+	controller := ratingService.GetRatingController()
+	controller.CheckRoutes(r)
+	controller.ProviderRoutes(r)
+	controller.ReviewRoutes(r)
+	controller.UserRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)

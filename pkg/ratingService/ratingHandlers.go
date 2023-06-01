@@ -1,4 +1,4 @@
-package main
+package ratingService
 
 import (
 	"github.com/gin-gonic/gin"
@@ -46,7 +46,7 @@ func (r *RatingHandler) createUser() gin.HandlerFunc {
 			return
 		}
 
-		err = r.service.createUser(&userBody)
+		err = r.service.CreateUser(&userBody)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
@@ -74,7 +74,7 @@ func (r *RatingHandler) createProvider() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = r.service.createProvider(&providerBody)
+		err = r.service.CreateProvider(&providerBody)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
@@ -104,7 +104,7 @@ func (r *RatingHandler) getProvider() gin.HandlerFunc {
 			return
 		}
 
-		err = r.service.getProvider(&provider, id)
+		err = r.service.GetProvider(&provider, id)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 404, Message: "Not found"}
 			context.JSON(http.StatusNotFound, errMsg)
@@ -138,7 +138,7 @@ func (r *RatingHandler) createReview() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		review, err := r.service.createReview(&reviewBody)
+		review, err := r.service.CreateReview(&reviewBody)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)

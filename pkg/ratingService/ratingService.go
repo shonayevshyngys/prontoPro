@@ -1,4 +1,4 @@
-package main
+package ratingService
 
 import (
 	"bytes"
@@ -24,14 +24,14 @@ type RatingService struct {
 }
 
 type RatingServiceInterface interface {
-	createUser(user *models.User) error
-	createProvider(provider *models.Provider) error
-	createReview(reviewDTO *util.CreateReviewDTO) (models.Review, error)
-	getProvider(provider *models.Provider, id int) error
+	CreateUser(user *models.User) error
+	CreateProvider(provider *models.Provider) error
+	CreateReview(reviewDTO *util.CreateReviewDTO) (models.Review, error)
+	GetProvider(provider *models.Provider, id int) error
 	sendNotification(review *models.Review)
 }
 
-func (r *RatingService) createUser(user *models.User) error {
+func (r *RatingService) CreateUser(user *models.User) error {
 	user.ID = 0
 	database.DataBase.DBInterface.CreateUser(user)
 	if user.ID == 0 {
@@ -40,7 +40,7 @@ func (r *RatingService) createUser(user *models.User) error {
 	return nil
 }
 
-func (r *RatingService) createProvider(provider *models.Provider) error {
+func (r *RatingService) CreateProvider(provider *models.Provider) error {
 	provider.ID = 0
 	provider.Rating = 0
 	if provider.Name == "" || provider.Description == "" {
@@ -54,7 +54,7 @@ func (r *RatingService) createProvider(provider *models.Provider) error {
 	return nil
 }
 
-func (r *RatingService) createReview(reviewDTO *util.CreateReviewDTO) (models.Review, error) {
+func (r *RatingService) CreateReview(reviewDTO *util.CreateReviewDTO) (models.Review, error) {
 	review := models.Review{
 		ReviewText: reviewDTO.ReviewText,
 		Rating:     reviewDTO.Rating,
@@ -73,7 +73,7 @@ func (r *RatingService) createReview(reviewDTO *util.CreateReviewDTO) (models.Re
 	return review, nil
 }
 
-func (r *RatingService) getProvider(provider *models.Provider, id int) error {
+func (r *RatingService) GetProvider(provider *models.Provider, id int) error {
 	database.DataBase.DBInterface.GetProvider(provider, id)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
