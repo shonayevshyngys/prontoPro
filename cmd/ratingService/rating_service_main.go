@@ -4,29 +4,28 @@ import (
 	_ "github.com/shonayevshyngys/prontopro/docs"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/shonayevshyngys/prontopro/pkg/ratingService"
 	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
-func init() {
+func setup() {
 	//connection
 	database.ConnectToDatabase()
 
 	//This one is created only for local testing, for persistent db should be deleted
 	var err error
-	err = database.Instance.AutoMigrate(&models.Provider{})
+	err = database.GormInstance.AutoMigrate(&models.Provider{})
 	if err != nil {
 		log.Fatal("Provider table wasn't created")
 	}
-	err = database.Instance.AutoMigrate(&models.User{})
+	err = database.GormInstance.AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatal("User table wasn't created")
 	}
-	err = database.Instance.AutoMigrate(&models.Review{})
+	err = database.GormInstance.AutoMigrate(&models.Review{})
 	if err != nil {
 		log.Fatal("Review table wasn't created")
 	}
@@ -41,14 +40,16 @@ func init() {
 // @query.collection.format multi
 
 func main() {
+	setup()
 	log.Println(os.Getenv("DATASOURCE"))
 	log.Println(os.Getenv("PORT"))
 	r := gin.Default()
-	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	UserRoutes(r)
-	ProviderRoutes(r)
-	ReviewRoutes(r)
-	CheckRoutes(r)
+
+	controller := ratingService.GetRatingController()
+	controller.CheckRoutes(r)
+	controller.ProviderRoutes(r)
+	controller.ReviewRoutes(r)
+	controller.UserRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)

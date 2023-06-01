@@ -4,17 +4,27 @@ import (
 	"context"
 	"fmt"
 	"github.com/redis/go-redis/v9"
-	"github.com/shonayevshyngys/prontopro/pkg/models"
+	"gorm.io/driver/postgres"
 	"log"
 	"os"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var Instance *gorm.DB
+var DataBase DBWrapper
+var RedisBase RedisWrapper
+
 var RedisInstance *redis.Client
 var RedisContext context.Context
+var GormInstance *gorm.DB
+
+type DBWrapper struct {
+	DBInterface DBInterface
+}
+
+type RedisWrapper struct {
+	RedisInterface RedisInterface
+}
 
 func ConnectToDatabase() {
 
@@ -26,33 +36,21 @@ func ConnectToDatabase() {
 		log.Fatal("Failed connect to database ", err)
 	}
 	db.Set("gorm:auto_preload", true)
-	Instance = db // newer version of golang forces this
+	GormInstance = db
+	DataBase = DBWrapper{
+		DBInterface: &DB{},
+	}
 }
 
 func ConnectToRedis() {
 	client := redis.NewClient(&redis.Options{
 		Addr:     os.Getenv("REDIS_URL"),
-		Password: "", // no password set
+		Password: "", // no password Set
 		DB:       0,  // use default DB
 	})
 	RedisInstance = client
 	RedisContext = context.Background()
-}
-
-func UserExists(id uint) bool {
-	var user models.User
-	Instance.First(&user, id)
-	if user.ID == 0 {
-		return false
+	RedisBase = RedisWrapper{
+		RedisInterface: &Redis{},
 	}
-	return true
-}
-
-func ProviderExists(id uint) bool {
-	var provider models.Provider
-	Instance.First(&provider, id)
-	if provider.ID == 0 {
-		return false
-	}
-	return true
 }

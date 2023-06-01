@@ -4,14 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shonayevshyngys/prontopro/pkg/database"
 	"github.com/shonayevshyngys/prontopro/pkg/models"
+	"github.com/shonayevshyngys/prontopro/pkg/notificationService"
 	"log"
 )
 
-func init() {
+func setup() {
 	database.ConnectToDatabase()
 	database.ConnectToRedis()
 	var err error
-	err = database.Instance.AutoMigrate(&models.Notification{})
+	err = database.GormInstance.AutoMigrate(&models.Notification{})
 	if err != nil {
 		log.Fatal("Notification table wasn't created")
 	}
@@ -25,8 +26,10 @@ func init() {
 // @BasePath /
 // @query.collection.format multi
 func main() {
+	setup()
 	r := gin.Default()
-	NotificationRoutes(r)
+	var controller = notificationService.GetNotificationController()
+	controller.NotificationRoutes(r)
 	err := r.Run()
 	if err != nil {
 		log.Fatal(err)

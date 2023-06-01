@@ -1,4 +1,4 @@
-package main
+package ratingService
 
 import (
 	"github.com/gin-gonic/gin"
@@ -9,13 +9,22 @@ import (
 	"strconv"
 )
 
-const dbErrorText = "Something went wrong during saving to DB"
-const wrongBodyErrorText = "Wrong body"
-const baseUrl = "/rating"
+func GetRatingHandler() RatingHandler {
+	var service = GetRatingService()
+	return RatingHandler{service: &service}
+}
 
-func UserRoutes(route *gin.Engine) {
-	user := route.Group(baseUrl)
-	user.POST("/user", createUser())
+type RatingHandler struct {
+	service RatingServiceInterface
+	ratingHandlerInterface
+}
+
+type ratingHandlerInterface interface {
+	createUser() gin.HandlerFunc
+	createProvider() gin.HandlerFunc
+	getProvider() gin.HandlerFunc
+	createReview() gin.HandlerFunc
+	checkIfExists() gin.HandlerFunc
 }
 
 // @Summary Creates a user
@@ -26,7 +35,7 @@ func UserRoutes(route *gin.Engine) {
 // @Success 201 {object} models.User
 // @Failure 400 {object} util.ErrorMessage
 // @Router /rating/user [post]
-func createUser() gin.HandlerFunc {
+func (r *RatingHandler) createUser() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		var userBody models.User
 		err := context.ShouldBindJSON(&userBody)
@@ -36,7 +45,8 @@ func createUser() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = CreateUser(&userBody)
+
+		err = r.service.CreateUser(&userBody)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
@@ -44,12 +54,6 @@ func createUser() gin.HandlerFunc {
 		context.JSON(http.StatusCreated, userBody)
 	}
 	return fn
-}
-
-func ProviderRoutes(route *gin.Engine) {
-	provider := route.Group(baseUrl)
-	provider.POST("/provider", createProvider())
-	provider.GET("/provider/:id", getProvider())
 }
 
 // @Summary Creates a provider
@@ -60,7 +64,7 @@ func ProviderRoutes(route *gin.Engine) {
 // @Success 201 {object} models.Provider
 // @Failure 400 {object} util.ErrorMessage
 // @Router /rating/provider [post]
-func createProvider() gin.HandlerFunc {
+func (r *RatingHandler) createProvider() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 
 		var providerBody models.Provider
@@ -70,7 +74,7 @@ func createProvider() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = CreateProvider(&providerBody)
+		err = r.service.CreateProvider(&providerBody)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
@@ -90,7 +94,7 @@ func createProvider() gin.HandlerFunc {
 // @Failure 400 {object} util.ErrorMessage
 // @Failure 404 {object} util.ErrorMessage
 // @Router /rating/provider/{provider_id} [get]
-func getProvider() gin.HandlerFunc {
+func (r *RatingHandler) getProvider() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		var provider models.Provider
 		id, err := strconv.Atoi(context.Param("id"))
@@ -100,7 +104,7 @@ func getProvider() gin.HandlerFunc {
 			return
 		}
 
-		err = GetProvider(&provider, id)
+		err = r.service.GetProvider(&provider, id)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 404, Message: "Not found"}
 			context.JSON(http.StatusNotFound, errMsg)
@@ -112,11 +116,6 @@ func getProvider() gin.HandlerFunc {
 	return fn
 }
 
-func ReviewRoutes(route *gin.Engine) {
-	rating := route.Group(baseUrl)
-	rating.POST("/review", createReview())
-}
-
 // @Summary Creates a review binded to user and provider
 // @ID createReview
 // @Tags Rating
@@ -125,7 +124,7 @@ func ReviewRoutes(route *gin.Engine) {
 // @Success 201 {object} models.Review
 // @Failure 400 {object} util.ErrorMessage
 // @Router /rating/review [post]
-func createReview() gin.HandlerFunc {
+func (r *RatingHandler) createReview() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		var reviewBody util.CreateReviewDTO
 		err := context.ShouldBindJSON(&reviewBody)
@@ -139,7 +138,7 @@ func createReview() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		review, err := CreateReview(&reviewBody)
+		review, err := r.service.CreateReview(&reviewBody)
 		if err != nil {
 			errMsg := util.ErrorMessage{Code: 400, Message: dbErrorText}
 			context.JSON(http.StatusBadRequest, errMsg)
@@ -147,14 +146,9 @@ func createReview() gin.HandlerFunc {
 		}
 		context.JSON(http.StatusCreated, review)
 
-		go SendNotification(&review)
+		go r.service.sendNotification(&review)
 	}
 	return fn
-}
-
-func CheckRoutes(route *gin.Engine) {
-	check := route.Group(baseUrl)
-	check.GET("/check/:providerID/:userID", checkIfExists())
 }
 
 // @Summary check if user and provider exists. It's needed for validation on notification service. Only for internal usage
@@ -166,7 +160,7 @@ func CheckRoutes(route *gin.Engine) {
 // @Failure 400 {object} util.ErrorMessage
 // @Failure 404 {object} util.ErrorMessage
 // @Router /rating/check/{provider_id}/{user_id} [get]
-func checkIfExists() gin.HandlerFunc {
+func (r *RatingHandler) checkIfExists() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		providerId, err := strconv.Atoi(context.Param("providerID"))
 		if err != nil || providerId < 1 {
@@ -180,7 +174,7 @@ func checkIfExists() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		if database.ProviderExists(uint(providerId)) && database.UserExists(uint(userId)) {
+		if database.DataBase.DBInterface.ProviderExists(uint(providerId)) && database.DataBase.DBInterface.UserExists(uint(userId)) {
 			successMsg := util.SuccessMessage{Code: 200, Message: "Both exist in db"}
 			context.JSON(http.StatusOK, successMsg)
 			return

@@ -1,4 +1,4 @@
-package main
+package notificationService
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,29 +8,35 @@ import (
 	"strconv"
 )
 
-const wrongBodyErrorText = "Wrong body"
+func GetNotificationHandler() NotificationHandler {
+	var service = GetNotificationService()
+	var handler = NotificationHandler{
+		service: &service,
+	}
+	return handler
+}
 
-func NotificationRoutes(route *gin.Engine) {
-	notification := route.Group("/notification")
+type NotificationHandler struct {
+	service notificationServiceInterface
+	NotificationHandlerInterface
+}
 
-	notification.POST("/", createNotification())
-
-	notification.GET("/provider/:id", getProviderNotification())
-
-	notification.GET("/user/:id", getUserNotifications())
-
-	notification.POST("/subscribe", subscribeUserToProvider())
+type NotificationHandlerInterface interface {
+	createNotification() gin.HandlerFunc
+	subscribeUserToProvider() gin.HandlerFunc
+	getProviderNotification() gin.HandlerFunc
+	getUserNotifications() gin.HandlerFunc
 }
 
 // @Summary Creates a notification object
 // @ID createNotification
 // @Tags Internal
 // @Produce json
-// @Param Notification body models.Notification true "To create notification you need to pass providerId and notification text".
+// @Param Notification body models.Notification true "To create notification you need to pass providerId and notification text. Only for internal usage".
 // @Success 201 {object} models.Notification
 // @Failure 400 {object} util.ErrorMessage
 // @Router /notification [post]
-func createNotification() gin.HandlerFunc {
+func (h *NotificationHandler) createNotification() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		var notificationBody models.Notification
 		err := context.ShouldBindJSON(&notificationBody)
@@ -39,7 +45,7 @@ func createNotification() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		SaveNotification(&notificationBody)
+		h.service.SaveNotification(&notificationBody)
 		context.JSON(http.StatusCreated, notificationBody)
 	}
 	return fn
@@ -53,7 +59,7 @@ func createNotification() gin.HandlerFunc {
 // @Success 200 {object} util.SuccessMessage
 // @Failure 400 {object} util.ErrorMessage
 // @Router /notification/subscribe [post]
-func subscribeUserToProvider() gin.HandlerFunc {
+func (h *NotificationHandler) subscribeUserToProvider() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		var subscriptionBody util.SubscriptionBody
 		err := context.ShouldBindJSON(&subscriptionBody)
@@ -62,7 +68,7 @@ func subscribeUserToProvider() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		err = SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
+		err = h.service.SubscribeUserToProvider(subscriptionBody.ProviderId, subscriptionBody.UserId, &subscriptionBody)
 		if err != nil {
 			context.JSON(http.StatusBadRequest, err)
 			return
@@ -74,14 +80,14 @@ func subscribeUserToProvider() gin.HandlerFunc {
 }
 
 // @Summary Get provider's notification
-// @ID getProviderNotifications
+// @ID GetProviderNotifications
 // @Tags Notification
 // @Produce json
 // @Param provider_id path int true "id of a provider"
 // @Success 200 {object} util.SuccessMessage
 // @Failure 400 {object} util.ErrorMessage
 // @Router /notification/provider/{provider_id} [get]
-func getProviderNotification() gin.HandlerFunc {
+func (h *NotificationHandler) getProviderNotification() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		id, err := strconv.Atoi(context.Param("id"))
 		if err != nil || id < 1 {
@@ -89,7 +95,7 @@ func getProviderNotification() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := GetProviderNotifications(id)
+		notifications, err := h.service.GetProviderNotifications(id)
 		if err != nil || len(notifications) == 0 {
 			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)
@@ -104,11 +110,11 @@ func getProviderNotification() gin.HandlerFunc {
 // @ID getUserNotifications
 // @Tags Notification
 // @Produce json
-// @Param user_io path int true "id of a user"
+// @Param user_id path int true "id of a user"
 // @Success 200 {object} util.SuccessMessage
 // @Failure 400 {object} util.ErrorMessage
 // @Router /notification/user/{user_id} [get]
-func getUserNotifications() gin.HandlerFunc {
+func (h *NotificationHandler) getUserNotifications() gin.HandlerFunc {
 	fn := func(context *gin.Context) {
 		id, err := strconv.Atoi(context.Param("id"))
 		if err != nil || id < 1 {
@@ -116,9 +122,9 @@ func getUserNotifications() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, errMsg)
 			return
 		}
-		notifications, err := GetUserNotifications(id)
+		notifications, err := h.service.GetUserNotifications(id)
 		if err != nil || len(notifications) == 0 {
-			errMsg := util.ErrorMessage{Code: 400, Message: "Not found entries"}
+			errMsg := util.ErrorMessage{Code: 404, Message: "Not found entries"}
 			context.JSON(http.StatusNotFound, errMsg)
 			return
 		}

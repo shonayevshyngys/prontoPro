@@ -1,4 +1,4 @@
-package main
+package ratingService
 
 import (
 	"bytes"
@@ -15,63 +15,79 @@ import (
 
 const objectNotCreatedErrorText = "object wasn't created"
 
-func CreateUser(user *models.User) error {
+func GetRatingService() RatingService {
+	return RatingService{}
+}
+
+type RatingService struct {
+	RatingServiceInterface
+}
+
+type RatingServiceInterface interface {
+	CreateUser(user *models.User) error
+	CreateProvider(provider *models.Provider) error
+	CreateReview(reviewDTO *util.CreateReviewDTO) (models.Review, error)
+	GetProvider(provider *models.Provider, id int) error
+	sendNotification(review *models.Review)
+}
+
+func (r *RatingService) CreateUser(user *models.User) error {
 	user.ID = 0
-	database.Instance.Create(&user)
+	database.DataBase.DBInterface.CreateUser(user)
 	if user.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
 	return nil
 }
 
-func CreateProvider(provider *models.Provider) error {
+func (r *RatingService) CreateProvider(provider *models.Provider) error {
 	provider.ID = 0
 	provider.Rating = 0
 	if provider.Name == "" || provider.Description == "" {
 		return errors.New(objectNotCreatedErrorText)
 	}
 
-	database.Instance.Create(&provider)
+	database.DataBase.DBInterface.CreateProvider(provider)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
 	return nil
 }
 
-func CreateReview(reviewDTO *util.CreateReviewDTO) (models.Review, error) {
+func (r *RatingService) CreateReview(reviewDTO *util.CreateReviewDTO) (models.Review, error) {
 	review := models.Review{
 		ReviewText: reviewDTO.ReviewText,
 		Rating:     reviewDTO.Rating,
 		UserID:     reviewDTO.UserId,
 		ProviderID: reviewDTO.ProviderId,
 	}
-	if !database.UserExists(review.UserID) || !database.ProviderExists(review.ProviderID) {
+	if !database.DataBase.DBInterface.UserExists(review.UserID) || !database.DataBase.DBInterface.ProviderExists(review.ProviderID) {
 		return review, errors.New("user or provider doesn't exist")
 	}
-	database.Instance.Create(&review)
+	database.DataBase.DBInterface.CreateReview(&review)
 	if review.ID == 0 {
 		return review, errors.New(objectNotCreatedErrorText)
 	}
-	database.Instance.Preload("User").Preload("Provider").Find(&review, review.ID)
+	database.DataBase.DBInterface.GetReview(&review, review.ID)
 
 	return review, nil
 }
 
-func GetProvider(provider *models.Provider, id int) error {
-	database.Instance.Find(&provider, id)
+func (r *RatingService) GetProvider(provider *models.Provider, id int) error {
+	database.DataBase.DBInterface.GetProvider(provider, id)
 	if provider.ID == 0 {
 		return errors.New(objectNotCreatedErrorText)
 	}
 	var rating float32
-	database.Instance.Raw("SELECT AVG(Rating) FROM reviews WHERE provider_id = ?", provider.ID).Scan(&rating)
+	database.DataBase.DBInterface.FetchAverageRating(provider.ID, &rating)
 	provider.Rating = rating
 	if provider.Rating != rating {
-		go database.Instance.Save(&provider)
+		go database.DataBase.DBInterface.UpdateProvider(provider)
 	}
 	return nil
 }
 
-func SendNotification(review *models.Review) {
+func (r *RatingService) sendNotification(review *models.Review) {
 
 	notification := models.Notification{
 		ProviderID:   review.ProviderID,
