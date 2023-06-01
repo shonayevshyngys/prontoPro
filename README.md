@@ -3,6 +3,7 @@
 ## Prerequisites && quick start
 
 Docker engine, docker-compose and bash. Free ports on 80, 8080, 7000, 7001, 6379, 5432 
+Ports are open solely for debug purposes.
 
 If you are on linux then you can run script **start.sh**. 
 Or you you can run docker compose on ./deployments/docker-compose.yaml
