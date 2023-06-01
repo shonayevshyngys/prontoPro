@@ -26,3 +26,9 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      
+    - name: Docker Compose Action
+      uses: isbang/compose-action@v1.4.1
+      with:
+        compose-file: "./deployments/docker-compose.yml"
+        down-flags: "--volumes"
