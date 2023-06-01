@@ -22,10 +22,20 @@ uses interface classes.
 - Testing problems with mocking, which also puts some part on point 1
 - Golang isn't truly OOP language and I was also struggling with encapsulation
 - Modules and packages are hard to understand coming from Java structure.
+- I think with stateless auth implementation would be much easier
 
 Thus, I truly regret choosing Go instead of C# :)
 
 ## Let's talk about the project
+
+### The solution of the project
+
+Before you read this part, i hardly recommend to run scenario test.
+
+Anyways, this given solution cluster allows us to register users via their username `POST /rating/user` and 
+providers `POST /rating/provider` with their names and descriptions. Then users can subscribe to provider `POST/notification/subscribe` with their id and provider id, and then they leave their reviews
+`POST /rating/provider` for provider with text and rating in range of 0-5. Providers receive their notifications by default
+`GET /notification/provider/{provider_id}` while users recieve notification only for subscribed providers `GET /notification/user/{user_id}`. Notifications can only be retrieved once and then deleted (of course they are persisted to db for testing)
 
 ### Architecture of the project
 ![Tux, the Linux mascot](./docs/arch.png)
@@ -36,6 +46,12 @@ This is primary architecture of the cluster.
 - Rating and Notification services are business servers
 - Swagger for providing whole cluster documentation. From client all requests will be sent to the nginx reverse proxy
 - Postgres and Redis as persistent storages
+
+### Couple of points on connection between services
+
+- Rating server sends requests to Notification service to create notifications. However they are also persisted to postgres
+- Notification service contacts rating server to make sure users and providers exist
+- These requests are blocked from outside and on trying will return TEAPOT code
 
 ### Codebase
  
@@ -52,6 +68,7 @@ Of course docker-compose dns helps but I don't think it has internal load balanc
 - It's not really reliable as it was written by me. I would say code by itself unreadable and dirty. Availability can be an issue as well as docker-compose doesn't have self healing
 - It's eventually consistent tho. But only because it uses only one instance of each database
 - It's scalable. Services follow CQRS pattern so we can setup as many replicas as we need
+
 
 
 ## Check list
