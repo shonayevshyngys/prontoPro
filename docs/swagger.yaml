@@ -97,7 +97,7 @@ paths:
       operationId: createNotification
       parameters:
       - description: To create notification you need to pass providerId and notification
-          text
+          text. Only for internal usage
         in: body
         name: Notification
         required: true
@@ -119,7 +119,7 @@ paths:
       - Internal
   /notification/provider/{provider_id}:
     get:
-      operationId: getProviderNotifications
+      operationId: GetProviderNotifications
       parameters:
       - description: id of a provider
         in: path

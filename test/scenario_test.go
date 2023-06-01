@@ -29,7 +29,10 @@ func Test_RatingService(t *testing.T) {
 	names := []string{"Paul", "Allen", "Mary", "Macbeth"}
 	for i, name := range names {
 		user := models.User{Username: name}
-		rService.CreateUser(&user)
+		err := rService.CreateUser(&user)
+		if err != nil {
+			t.Fatal("User wasn't created")
+		}
 		assert.EqualValues(t, user.ID, i+1)
 		assert.EqualValues(t, user.Username, name)
 	}
@@ -42,7 +45,10 @@ func Test_RatingService(t *testing.T) {
 			Name:        name,
 			Description: "Doing some stuff",
 		}
-		rService.CreateProvider(&provider)
+		err := rService.CreateProvider(&provider)
+		if err != nil {
+			t.Fatal("Provider wasn't created")
+		}
 		assert.EqualValues(t, provider.ID, i+1)
 		assert.EqualValues(t, provider.Name, name)
 	}
@@ -92,6 +98,7 @@ func Test_RatingService(t *testing.T) {
 	}
 	time.Sleep(time.Second * 2) // let's wait a little bit for notifications
 	log.Println("Each provider should have average rating of 2.5")
+	log.Println("Let's try to get user notifications")
 	for i := 1; i <= 4; i++ {
 		notifications, err := nService.GetUserNotifications(i)
 		if err != nil {
@@ -100,7 +107,7 @@ func Test_RatingService(t *testing.T) {
 		assert.NotEqualf(t, 0, len(notifications), "User has zero notifications")
 	}
 	time.Sleep(time.Second * 2) // let's wait a little bit for deletion of notifcations
-	log.Println("So we fetch all users' notifcations, let's retrieve them once again")
+	log.Println("So we fetched all users' notifcations, let's retrieve them once again")
 	for i := 1; i <= 4; i++ {
 		notifations, err := nService.GetUserNotifications(i)
 		if err != nil {

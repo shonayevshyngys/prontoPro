@@ -28,7 +28,7 @@ const docTemplate = `{
                 "operationId": "createNotification",
                 "parameters": [
                     {
-                        "description": "To create notification you need to pass providerId and notification text",
+                        "description": "To create notification you need to pass providerId and notification text. Only for internal usage",
                         "name": "Notification",
                         "in": "body",
                         "required": true,
@@ -62,7 +62,7 @@ const docTemplate = `{
                     "Notification"
                 ],
                 "summary": "Get provider's notification",
-                "operationId": "getProviderNotifications",
+                "operationId": "GetProviderNotifications",
                 "parameters": [
                     {
                         "type": "integer",
